@@ -147,6 +147,16 @@ class AssemblyAITranscriberConfig(
     buffer_size_seconds: float = 0.1
     word_boost: Optional[List[str]] = None
     end_utterance_silence_threshold_milliseconds: Optional[int] = None
+    # Newer AssemblyAI realtime requires selecting a model (e.g., "universal")
+    model: Optional[str] = None
+    # Optional: override websocket URL via config or env (ASSEMBLY_AI_WS_URL)
+    ws_url: Optional[str] = None
+    # v3 Streaming optional params
+    end_of_turn_confidence_threshold: Optional[float] = None
+    format_turns: Optional[bool] = None
+    min_end_of_turn_silence_when_confident_ms: Optional[int] = None
+    max_turn_silence_ms: Optional[int] = None
+    keyterms_prompt: Optional[List[str]] = None
 
 
 class WhisperCPPTranscriberConfig(

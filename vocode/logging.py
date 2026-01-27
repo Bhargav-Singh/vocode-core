@@ -154,7 +154,7 @@ def configure_pretty_logging() -> None:
     logger.add(
         sys.stdout,
         level=logging.DEBUG,
-        backtrace=False,
+        backtrace=True,
         diagnose=False,
         serialize=False,
         colorize=True,
