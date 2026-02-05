@@ -15,6 +15,21 @@ turn_based_conversation:
 streaming_conversation:
 	poetry run python quickstarts/streaming_conversation.py
 
+streaming_conversation_deepgram:
+	poetry run python quickstarts/streaming_deepgram_openai_elevenlabs.py
+
+streaming_conversation_aai_elevenlabs:
+	poetry run python quickstarts/streaming_assemblyai_openai_elevenlabs.py
+
+audio_check_mics:
+	poetry run python quickstarts/audio_check_microphones.py
+
+audio_check_speakers:
+	poetry run python quickstarts/audio_check_speakers.py
+
+stt_assemblyai_smoke:
+	poetry run python quickstarts/stt_assemblyai_smoke.py
+
 PYTHON_FILES=.
 lint: PYTHON_FILES=vocode/ quickstarts/ playground/
 lint_diff typecheck_diff: PYTHON_FILES=$(shell git diff --name-only --diff-filter=d main | grep -E '\.py$$')
@@ -44,4 +59,3 @@ help:
 	@echo "  lint_diff   Lint changed Python files"
 	@echo "  test        Run tests"
 	@echo "  help        Show this help message"
-

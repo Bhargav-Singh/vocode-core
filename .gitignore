@@ -1,6 +1,14 @@
 venv*/
 __pycache__/
 .env
+.env.*
+.envrc
+*.env
+*.env.*
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*
 .DS_Store
 dist/
 credentials.json
@@ -11,3 +19,4 @@ benchmark_results/
 private.key
 dump.rdb
 .idea
+
