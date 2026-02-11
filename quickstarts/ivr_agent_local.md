@@ -6,10 +6,11 @@ the state machine (name + birthdate capture, confirmation, retries, and summary)
 before wiring telephony or full backend integrations.
 
 ## What this does
-- Starts a CLI-based "call" loop.
-- Lets you trigger the test flow (name + birthdate).
+- Starts a CLI-based "call" loop or the full audio pipeline.
+- Lets you run the claim status flow (member ID, DOB, service date, caller type).
+- Includes the test flow (name + birthdate) for internal validation.
 - Confirms inputs and enforces a 3-retry limit per field.
-- Returns static "marks" when `dry_run=True`.
+- Uses static data for claims and marks when `dry_run=True`.
 
 ## Requirements
 - Python >= 3.10
@@ -49,3 +50,5 @@ Ensure your audio devices are available and the required API keys are set.
 ## Notes
 - The test flow returns static marks for now; this will be replaced with real
   backend calls later.
+- The claim flow uses a dry-run response (static claims). To simulate “no records,”
+  try a member ID ending in `0`.

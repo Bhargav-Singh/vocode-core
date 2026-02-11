@@ -16,7 +16,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from vocode.helpers import create_streaming_microphone_input_and_speaker_output
-from vocode.ivr_agent.agent.test_flow_agent import IVRTestFlowAgent
+from vocode.ivr_agent.agent.ivr_flow_agent import IVRFlowAgent
 from vocode.ivr_agent.flows.intent_router import classify_intent
 from vocode.ivr_agent.flows.test_flow import handle_test_flow_input, start_test_flow
 from vocode.ivr_agent.policies.prompt_templates import system_prompt
@@ -208,7 +208,7 @@ async def main():
                 version=settings.deepgram_version,
             ),
         ),
-        agent=IVRTestFlowAgent(
+        agent=IVRFlowAgent(
             ChatGPTAgentConfig(
                 openai_api_key=openai_key,
                 base_url_override=(settings.openai_base_url or os.getenv("OPENAI_BASE_URL")),

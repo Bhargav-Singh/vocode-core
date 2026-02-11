@@ -52,3 +52,13 @@ Use this file to capture decisions, TODOs, and follow-ups across sessions. Keep 
 - Audio test flow:
   - Added `IVRTestFlowAgent` in `vocode/ivr_agent/agent/test_flow_agent.py` to run the test flow in the streaming pipeline with optional LLM rephrasing.
   - Updated `quickstarts/ivr_agent_local.py` to use the new agent in audio mode; CLI path unchanged.
+
+## 2024-XX-XX
+- Claim flow start:
+  - Added LLM-based utterance parser in `vocode/ivr_agent/agent/utterance_parser.py` for intent/command/slot extraction (no keyword-only routing).
+  - Added claim flow controller in `vocode/ivr_agent/flows/claim_flow.py` with dry-run claim data and confirmations.
+  - Added `IVRFlowAgent` in `vocode/ivr_agent/agent/ivr_flow_agent.py` and wired audio mode to use it in `quickstarts/ivr_agent_local.py`.
+
+## 2024-XX-XX
+- Parser resilience:
+  - Added lightweight regex fallbacks in `vocode/ivr_agent/agent/utterance_parser.py` for member ID, dates, confirmations, and result actions when LLM parsing fails.
