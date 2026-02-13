@@ -109,7 +109,7 @@ telephony_server = TelephonyServer(
         TwilioInboundCallConfig(
             url="/inbound_call",
             agent_config=ChatGPTAgentConfig(
-                initial_message=BaseMessage(text="Hello!"),
+                initial_message=BaseMessage(text="Hello, How can i assist you today?"),
                 prompt_preamble="Have a pleasant conversation about life",
                 generate_responses=True,
                 openai_api_key=os.getenv("OPENAI_API_KEY"),
