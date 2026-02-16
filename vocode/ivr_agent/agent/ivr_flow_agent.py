@@ -5,11 +5,9 @@ from typing import AsyncGenerator, Optional
 from loguru import logger
 from openai import AsyncAzureOpenAI, AsyncOpenAI
 
-from vocode.ivr_agent.agent.utterance_parser import LLMUtteranceParser
-from vocode.ivr_agent.flows.claim_flow import handle_claim_flow_input, start_claim_flow
-from vocode.ivr_agent.flows.test_flow import handle_test_flow_input, start_test_flow
-from vocode.ivr_agent.state.models import FlowPhase, Intent
-from vocode.ivr_agent.state.store import increment_retry, new_state, reset_for_main_menu, set_intent
+from vocode.ivr_agent.flows.intent_router import parent_graph
+from langgraph.types import Command
+
 from vocode.streaming.agent.base_agent import GeneratedResponse, RespondAgent
 from vocode.streaming.agent.chat_gpt_agent import instantiate_openai_client
 from vocode.streaming.models.agent import ChatGPTAgentConfig
@@ -30,11 +28,19 @@ class IVRFlowAgent(RespondAgent[ChatGPTAgentConfig]):
         use_llm_rephrase: bool = True,
         **kwargs,
     ):
+        # 1. Intitialize the parent class
         super().__init__(agent_config=agent_config, **kwargs)
-        self.state = new_state()
-        self.state.phase = FlowPhase.INTENT_CAPTURE
-        self.dry_run = dry_run
-        self.use_llm_rephrase = use_llm_rephrase
+
+        # 2. Logical "RAM" of the agent
+        # self.state = new_state()
+        # self.state.phase = FlowPhase.INTENT_CAPTURE
+
+        # 3. Specific flags
+        self.dry_run = dry_run     # If true, don't actually call real backends
+        self.use_llm_rephrase = use_llm_rephrase  # "Polish" the text?
+        self.google_api_key = google_api_key
+
+        # 4. The "Ears" and "Understanding"
         self.openai_client: Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
         self.parser: Optional[LLMUtteranceParser] = None
         self.openai_client = instantiate_openai_client(agent_config)
@@ -73,82 +79,56 @@ class IVRFlowAgent(RespondAgent[ChatGPTAgentConfig]):
         is_interrupt: bool = False,
         bot_was_in_medias_res: bool = False,
     ) -> AsyncGenerator[GeneratedResponse, None]:
-        _ = conversation_id, is_interrupt, bot_was_in_medias_res
-        prompt = "How can I assist you today?"
+        
+        # 1. Setup LangGraph Config with Conversation ID
+        config = {"configurable": {"thread_id": conversation_id}}
+        
+        logger.info(f"Generating response for thread {conversation_id}: {human_input}")
 
-        parsed = await self.parser.parse(
-            human_input,
-            phase=self.state.phase,
-            current_field=self.state.current_field,
-            awaiting_confirmation=self.state.awaiting_confirmation,
+        # 2. Check Graph State (Prime if New)
+        # If this thread has no history, we must initialize it.
+        # The initialization runs the graph up to the first 'interrupt' (Greeting Node).
+        current_state = await parent_graph.aget_state(config)
+        
+        if not current_state.next:
+            logger.info("Initializing new graph session")
+            # This executes 'greet_and_listen' and pauses at the interrupt
+            await parent_graph.ainvoke({"dialogue_status": "active"}, config)
+
+        # 3. Resume Graph with User Input
+        # We pass the user's text to the node currently waiting at 'interrupt'
+        await parent_graph.ainvoke(Command(resume=human_input), config)
+
+        # 4. Retrieve the Bot's Response
+        # The graph has now run to the NEXT interrupt (or finished).
+        # We inspect the current state to find the 'message_to_play'.
+        snapshot = await parent_graph.aget_state(config)
+        
+        message_text = "Sorry i don't getting your answer." # Fallback
+        
+        if snapshot.tasks and snapshot.tasks[0].interrupts:
+            # Retrieve the payload passed to interrupt({...}) in the node
+            payload = snapshot.tasks[0].interrupts[0].value
+            message_text = payload.get("message_to_play", "")
+            
+            # Check for termination signal
+            if payload.get("input_type") == "none":
+                logger.info("Graph signaled end of conversation.")
+                # We yield the final message, but we might want to signal termination logic here
+        
+        elif not snapshot.next:
+            logger.info("Graph execution completed (END reached).")
+            # Handle implicit end of flow if necessary
+
+        # 5. Optional Polish
+        if self.use_llm_rephrase and message_text:
+            message_text = await self._rephrase(message_text)
+
+        # 6. Yield Response
+        yield GeneratedResponse(
+            message=BaseMessage(text=message_text), 
+            is_interruptible=True
         )
-
-        if parsed.command in ("START_OVER", "MAIN_MENU"):
-            reset_for_main_menu(self.state)
-            prompt = "How can I assist you today?"
-        elif parsed.command == "TRANSFER":
-            self.state.phase = FlowPhase.TRANSFER
-            prompt = "Transferring you to a representative now."
-        else:
-            if self.state.phase in (FlowPhase.CALL_START, FlowPhase.INTENT_CAPTURE):
-                if parsed.intent == Intent.CLAIM_STATUS:
-                    set_intent(self.state, parsed.intent)
-                    response = start_claim_flow(self.state)
-                    prompt = response.prompt
-                elif parsed.intent == Intent.TEST_FLOW:
-                    set_intent(self.state, parsed.intent)
-                    response = start_test_flow(self.state)
-                    prompt = response.prompt
-                else:
-                    retries = increment_retry(self.state, "intent")
-                    if retries >= 3:
-                        self.state.phase = FlowPhase.TRANSFER
-                        prompt = "Transferring you to a representative now."
-                    else:
-                        prompt = (
-                            "I can help with claim status, authorization status, or eligibility. "
-                            "Which would you like?"
-                        )
-            elif self.state.phase == FlowPhase.CLAIM_FLOW:
-                response = handle_claim_flow_input(self.state, parsed, dry_run=self.dry_run)
-                prompt = response.prompt
-            elif self.state.phase == FlowPhase.TEST_FLOW:
-                response = handle_test_flow_input(self.state, human_input, dry_run=self.dry_run)
-                prompt = response.prompt
-            elif self.state.phase == FlowPhase.RESULT_MENU:
-                action = parsed.result_action
-                if action == "NONE" and parsed.command == "REPEAT":
-                    action = "REPEAT"
-                if action == "REPEAT" and self.state.last_summary:
-                    prompt = f"{self.state.last_summary} Say 'repeat' or 'start over'."
-                elif action == "ANOTHER":
-                    if self.state.intent == Intent.CLAIM_STATUS:
-                        response = start_claim_flow(self.state)
-                        prompt = response.prompt
-                    elif self.state.intent == Intent.TEST_FLOW:
-                        response = start_test_flow(self.state)
-                        prompt = response.prompt
-                    else:
-                        reset_for_main_menu(self.state)
-                        prompt = "How can I assist you today?"
-                elif action == "MAIN_MENU":
-                    reset_for_main_menu(self.state)
-                    prompt = "How can I assist you today?"
-                elif action == "TRANSFER":
-                    self.state.phase = FlowPhase.TRANSFER
-                    prompt = "Transferring you to a representative now."
-                else:
-                    prompt = (
-                        "Would you like me to repeat that, check another claim, go to the main menu, "
-                        "or transfer you to customer service?"
-                    )
-            elif self.state.phase == FlowPhase.TRANSFER:
-                prompt = "Transferring you to a representative now."
-
-        if self.use_llm_rephrase:
-            prompt = await self._rephrase(prompt)
-
-        yield GeneratedResponse(message=BaseMessage(text=prompt), is_interruptible=True)
 
     def update_last_bot_message_on_cut_off(self, message: str):
         _ = message

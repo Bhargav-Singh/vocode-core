@@ -1,66 +1,64 @@
-"""
-Prompt templates and guidance for the IVR replacement agent.
+import os
+from pathlib import Path
+from langchain_core.prompts import ChatPromptTemplate
+from loguru import logger
 
-These strings are used as `prompt_preamble` (system messages) and optional
-few-shot examples to keep the LLM behavior aligned with the deterministic flow.
-"""
+class PromptLoader:
+    def __init__(self, relative_path: str = "vocode/ivr_agent/policies"):
+        """
+        Initializes the loader.
+        
+        Args:
+            relative_path: Path to the prompt directory relative to the project root.
+        """
+        # Resolve the path dynamically. 
+        # Path(os.getcwd()) is safe if you always run from project root.
+        # Alternatively, use Path(__file__).parent if files are in the same folder as this script.
+        self.prompt_dir = Path(os.getcwd()) / relative_path
+        self.prompts = {}
 
-INTENT_LABELS = ["CLAIM_STATUS", "AUTH_STATUS", "ELIGIBILITY", "UNKNOWN"]
+    def load_prompts(self) -> dict[str, ChatPromptTemplate]:
+        """
+        Reads all .txt files in the directory and converts them to LangChain templates.
+        """
+        if not self.prompt_dir.exists():
+            logger.error(f"Prompt directory not found at: {self.prompt_dir}")
+            return {}
 
+        logger.info(f"Loading prompts from: {self.prompt_dir}")
 
-def system_prompt() -> str:
-    """Persona and policy for the call-center IVR replacement agent."""
-    return (
-        "You are a concise, polite call-center voice agent replacing a DTMF IVR. "
-        "You only help with claim status, authorization status, or member eligibility. "
-        "Follow these rules:\n"
-        "- Keep turns short and natural; avoid long paragraphs.\n"
-        "- Always collect required fields with confirmation after each value: "
-        "'You said {value}. Is that correct?'\n"
-        "- Retry a field up to 3 times; on 3 failures, gracefully transfer to a human.\n"
-        "- Users can say 'start over', 'main menu', 'agent', or 'representative' at any time.\n"
-        "- Allow interruptions and corrections; if corrected, restate the latest confirmed values.\n"
-        "- Respect caller type branching: patient path never asks for NPI/Tax ID; provider path may.\n"
-        "- After delivering results, offer: repeat, another <item>, main menu, or transfer to customer service.\n"
-        "- If intent is unknown, say you handle claims, authorizations, or eligibility and ask which.\n"
-        "- Never invent data; if backend returns no records, say so and offer retry or transfer.\n"
-        "- Redact sensitive values in logs; do not repeat full IDs unless confirming with the caller."
-    )
+        # Iterate over all .txt files using pathlib
+        for file_path in self.prompt_dir.glob("*.txt"):
+            try:
+                # 1. Generate Key: "my_prompt.txt" -> "MY_PROMPT"
+                key = file_path.stem.upper()
+                
+                # 2. Read Content
+                content = file_path.read_text(encoding="utf-8")
 
+                # 3. Create Template
+                # This structure aligns with your flows: 
+                # chain.invoke({"user_input": user_input})
+                template = ChatPromptTemplate.from_messages([
+                    ("system", content),
+                    ("human", "{user_input}"),
+                ])
 
-def intent_few_shots() -> list[dict]:
-    """Few-shot messages to steer intent classification in LLM calls."""
-    return [
-        {
-            "role": "user",
-            "content": "I want to check my claim status.",
-        },
-        {
-            "role": "assistant",
-            "content": '{"intent": "CLAIM_STATUS"}',
-        },
-        {
-            "role": "user",
-            "content": "Is my pre-approval ready?",
-        },
-        {
-            "role": "assistant",
-            "content": '{"intent": "AUTH_STATUS"}',
-        },
-        {
-            "role": "user",
-            "content": "Is this member covered right now?",
-        },
-        {
-            "role": "assistant",
-            "content": '{"intent": "ELIGIBILITY"}',
-        },
-        {
-            "role": "user",
-            "content": "Can you help with billing?",
-        },
-        {
-            "role": "assistant",
-            "content": '{"intent": "UNKNOWN"}',
-        },
-    ]
+                self.prompts[key] = template
+                logger.debug(f"Loaded prompt template: {key}")
+
+            except Exception as e:
+                logger.error(f"Failed to load prompt {file_path.name}: {e}")
+                raise e
+
+        return self.prompts
+
+# ==========================================
+# EXPORTED VARIABLE
+# ==========================================
+# This variable 'PROMPT' is what you will import in your flows.
+# Usage: from prompt_loader import PROMPT 
+# OR in setting.py: from vocode.ivr_agent.policies.prompt_loader import PROMPT
+
+loader = PromptLoader()
+PROMPT = loader.load_prompts()

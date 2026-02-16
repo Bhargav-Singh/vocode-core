@@ -1,55 +1,34 @@
-from __future__ import annotations
+from typing import TypedDict, Optional, Literal, Dict
 
-from typing import Optional
+class IVRState(TypedDict):
+    # --- Control Flags ---
+    # The text the TTS engine should speak
+    message_to_play: str
+    # How the system should listen: "varied" (speech), "single" (DTMF/short), "none" (hangup/processing)
+    input_type: Literal["varied", "single", "none"]
+    # The raw input captured from the user
+    last_user_input: Optional[str]
+    # Current active intent (CLAIM, AUTH, ELIGIBILITY, TRANSFER)
+    intent: Optional[str]
+    # Status to help Parent Graph decide next step after a Subgraph ends
+    dialogue_status: Literal["active", "transfer", "main_menu", "complete"]
 
-from vocode.ivr_agent.state.models import ConversationState, FlowPhase, Intent
+    # NEW: Tracks which flow is active (CLAIM, AUTH, etc.) - Preserved during reset
+    flow_name: Optional[str]
 
+    # --- Shared Business Slots ---
+    member_id: Optional[str]
+    dob: Optional[str]
 
-DEFAULT_RETRY_LIMIT = 3
+    # --- Auth Flow Specific Slots ---
+    npi: Optional[str]
+    user_role: Optional[Literal["PATIENT", "PROVIDER"]]
 
+    # --- Temporary Slots (For Confirmation Loops) ---
+    temp_member_id: Optional[str]
+    temp_dob: Optional[str]
+    temp_npi: Optional[str]
 
-def new_state() -> ConversationState:
-    return ConversationState()
-
-
-def reset_for_main_menu(state: ConversationState) -> None:
-    state.reset_slots()
-    state.reset_retries()
-    state.intent = Intent.UNKNOWN
-    state.phase = FlowPhase.INTENT_CAPTURE
-    state.last_confirmed_field = None
-    state.last_prompt = None
-    state.last_summary = None
-    state.current_field = None
-    state.pending_value = None
-    state.awaiting_confirmation = False
-
-
-def set_intent(state: ConversationState, intent: Intent) -> None:
-    state.intent = intent
-    if intent == Intent.CLAIM_STATUS:
-        state.phase = FlowPhase.CLAIM_FLOW
-    elif intent == Intent.AUTH_STATUS:
-        state.phase = FlowPhase.AUTH_FLOW
-    elif intent == Intent.ELIGIBILITY:
-        state.phase = FlowPhase.ELIGIBILITY_FLOW
-    elif intent == Intent.TEST_FLOW:
-        state.phase = FlowPhase.TEST_FLOW
-    else:
-        state.phase = FlowPhase.INTENT_CAPTURE
-
-
-def increment_retry(state: ConversationState, field_name: str) -> int:
-    state.retries[field_name] = state.retries.get(field_name, 0) + 1
-    return state.retries[field_name]
-
-
-def retries_exceeded(
-    state: ConversationState, field_name: str, limit: int = DEFAULT_RETRY_LIMIT
-) -> bool:
-    return state.retries.get(field_name, 0) >= limit
-
-
-def record_confirmation(state: ConversationState, field_name: str, value: Optional[str]) -> None:
-    setattr(state.slots, field_name, value)
-    state.last_confirmed_field = field_name
+    # --- RETRY TRACKER ---
+    # Stores counts like {"member_id": 1, "dob": 2}
+    retries: Optional[Dict[str, int]]

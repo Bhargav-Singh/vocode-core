@@ -5,6 +5,7 @@ import sys
 import time
 from math import log10
 from pathlib import Path
+import uuid
 
 import numpy as np
 import sounddevice as sd
@@ -17,12 +18,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from vocode.helpers import create_streaming_microphone_input_and_speaker_output
 from vocode.ivr_agent.agent.ivr_flow_agent import IVRFlowAgent
-from vocode.ivr_agent.flows.intent_router import classify_intent
-from vocode.ivr_agent.flows.test_flow import handle_test_flow_input, start_test_flow
-from vocode.ivr_agent.policies.prompt_templates import system_prompt
-from vocode.ivr_agent.state.commands import apply_command, detect_command
-from vocode.ivr_agent.state.models import FlowPhase, Intent
-from vocode.ivr_agent.state.store import new_state, set_intent
+from langgraph.types import Command
+# from vocode.ivr_agent.flows.test_flow import handle_test_flow_input, start_test_flow
+# from vocode.ivr_agent.state.commands import apply_command, detect_command
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
 from vocode.streaming.models.message import BaseMessage
@@ -34,7 +32,7 @@ from vocode.streaming.models.transcriber import (
 from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
 from vocode.streaming.transcriber.deepgram_transcriber import DeepgramTranscriber
-
+from vocode.ivr_agent.flows.intent_router import parent_graph 
 
 def load_env_if_available(*paths: str) -> None:
     try:
@@ -61,6 +59,7 @@ class Settings(BaseSettings):
     openai_temperature: float | None = None
     deepgram_api_key: str | None = None
     elevenlabs_api_key: str | None = None
+    google_api_key: str | None = None
 
     # Deepgram options
     deepgram_language: str | None = None
@@ -94,96 +93,69 @@ def require(name: str, value: str | None):
     return value
 
 
-def run_cli(dry_run: bool = True) -> None:
-    state = new_state()
-    state.phase = FlowPhase.INTENT_CAPTURE
+async def run_cli(dry_run: bool = True) -> None:
+    """
+    Runs the IVR agent in a local command-line loop using LangGraph.
+    """
+    # 1. Setup State
+    thread_id = str(uuid.uuid4())
+    config = {"configurable": {"thread_id": thread_id}}
 
-    def say(text: str) -> None:
-        state.last_prompt = text
-        print(f"Agent: {text}")
+    print("IVR Agent CLI (LangGraph). Type 'exit' to quit.")
 
-    print("IVR Agent CLI (test flow only). Type 'exit' to quit.")
-    say(
-        "Thank you for calling. I can help you check claim status, authorization status, "
-        "or member eligibility. How can I assist you today?"
-    )
+    # 2. Initialize Graph (Start the flow)
+    # This runs 'greet_and_listen' and pauses at interrupt()
+    await parent_graph.ainvoke({"dialogue_status": "active"}, config)
 
+    # 3. Fetch Initial Greeting
+    snapshot = await parent_graph.aget_state(config)
+    greeting = "Hello?"
+    if snapshot.tasks and snapshot.tasks[0].interrupts:
+        greeting = snapshot.tasks[0].interrupts[0].value.get("message_to_play", "Hello?")
+    
+    print(f"Agent: {greeting}")
+
+    # 4. Conversation Loop
     while True:
         user_text = input("You: ").strip()
         if user_text.lower() in ("exit", "quit"):
-            say("Thank you for calling. Have a great day.")
+            print("Conversation ended.")
             break
 
-        state.last_user_utterance = user_text
-        command = detect_command(user_text)
-        applied_phase = apply_command(state, command)
-        if applied_phase == FlowPhase.TRANSFER:
-            say("Transferring you to a representative now.")
+        # Resume the graph with user input
+        await parent_graph.ainvoke(Command(resume=user_text), config)
+
+        # Retrieve the new state (Bot Response)
+        snapshot = await parent_graph.aget_state(config)
+
+        # Check if flow has ended (reached END node)
+        if not snapshot.next:
+            print("Agent: (Call Ended)")
             break
-        if applied_phase == FlowPhase.INTENT_CAPTURE:
-            say("How can I assist you today?")
-            continue
 
-        if state.phase in (FlowPhase.CALL_START, FlowPhase.INTENT_CAPTURE):
-            intent = classify_intent(user_text, allow_test_flow=True)
-            if intent == Intent.TEST_FLOW:
-                set_intent(state, intent)
-                response = start_test_flow(state)
-                say(response.prompt)
-            else:
-                say(
-                    "Claim, authorization, and eligibility flows are not wired yet. "
-                    "For now, say 'test' to run the test flow."
-                )
-            continue
+        # Check for interrupt payload (Message to play)
+        if snapshot.tasks and snapshot.tasks[0].interrupts:
+            payload = snapshot.tasks[0].interrupts[0].value
 
-        if state.phase == FlowPhase.TEST_FLOW:
-            response = handle_test_flow_input(state, user_text, dry_run=dry_run)
-            say(response.prompt)
-            if response.should_transfer:
+            msg = payload.get("message_to_play", "")
+            print(f"Agent: {msg}")
+
+            # Check if this node signals a hangup/transfer
+            if payload.get("input_type") == "none":
+                print("(System: Termination signal received)")
                 break
-            if response.is_done:
-                say("Say 'repeat', 'start over', or 'exit'.")
-            continue
-
-        if state.phase == FlowPhase.RESULT_MENU:
-            lowered = user_text.lower()
-            if "repeat" in lowered and state.last_summary:
-                say(state.last_summary)
-                say("Say 'repeat', 'start over', or 'exit'.")
-            else:
-                say("Say 'start over' to return to the main menu or 'exit' to quit.")
-            continue
-
-        if state.phase == FlowPhase.TRANSFER:
-            say("Transferring you to a representative now.")
-            break
 
 
 async def main():
-    # Load env files if present (optional second file)
-    load_env_if_available("talkbot.env", ".env", "/home/hellfire/vocode-core/talkbot.env")
+    # Load env files
+    load_env_if_available("talkbot.env", ".env")
 
     settings = Settings()
 
-    # Resolve API keys (validate explicitly to avoid late failures)
+    # Resolve API keys
     openai_key = require("OPENAI_API_KEY", settings.openai_api_key or os.getenv("OPENAI_API_KEY"))
     deepgram_key = require("DEEPGRAM_API_KEY", settings.deepgram_api_key or os.getenv("DEEPGRAM_API_KEY"))
     eleven_key = require("ELEVENLABS_API_KEY", settings.elevenlabs_api_key or os.getenv("ELEVENLABS_API_KEY"))
-
-    # List devices for visibility
-    try:
-        devices = sd.query_devices()
-        input_devices = [d for d in devices if d.get("max_input_channels", 0) > 0]
-        output_devices = [d for d in devices if d.get("max_output_channels", 0) > 0]
-        print("Available input devices:")
-        for idx, d in enumerate(input_devices):
-            print(f"  {idx}: {d['name']}")
-        print("Available output devices:")
-        for idx, d in enumerate(output_devices):
-            print(f"  {idx}: {d['name']}")
-    except Exception:
-        pass
 
     # Select audio devices
     microphone_input, speaker_output = create_streaming_microphone_input_and_speaker_output(
@@ -222,16 +194,19 @@ async def main():
                     if settings.openai_temperature is not None
                     else float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
                 ),
+                # Note: The initial message here is handled by StreamingConversation. 
+                # The Graph also produces a greeting. Typically, you align them or let the Graph handle logic.
                 initial_message=BaseMessage(
                     text=(
                         "Thank you for calling. I can help you check claim status, "
                         "authorization status, or member eligibility. How can I assist you today?"
                     )
                 ),
-                prompt_preamble=system_prompt(),
+                prompt_preamble="You are a helpful IVR assistant.", # Simplistic preamble, real logic is in graph
             ),
             dry_run=True,
-            use_llm_rephrase=True,
+            use_llm_rephrase=False, # Disable rephrase to reduce latency for now
+            google_api_key=settings.google_api_key,
         ),
         synthesizer=ElevenLabsSynthesizer(
             ElevenLabsSynthesizerConfig.from_output_device(
@@ -248,7 +223,7 @@ async def main():
     print("Conversation started, press Ctrl+C to end")
     signal.signal(signal.SIGINT, lambda _0, _1: asyncio.create_task(conversation.terminate()))
 
-    # Periodic mic level debug to confirm input activity
+    # Periodic mic level debug
     last_level_print = 0.0
     while conversation.is_active():
         chunk = await microphone_input.get_audio()
@@ -264,8 +239,6 @@ async def main():
                         print(f"[mic] level: {dbfs:.1f} dBFS")
                     else:
                         print("[mic] silence")
-                else:
-                    print("[mic] empty buffer")
             except Exception:
                 pass
             last_level_print = now
@@ -276,6 +249,6 @@ async def main():
 if __name__ == "__main__":
     configure_pretty_logging()
     if "--cli" in sys.argv or os.getenv("IVR_CLI") == "1":
-        run_cli(dry_run=True)
+        asyncio.run(run_cli(dry_run=True))
     else:
         asyncio.run(main())

@@ -1,66 +1,82 @@
-from __future__ import annotations
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Dict, Optional
+class IntentClassifierOutputSchema(BaseModel):
+    """Schema for classifying the user's intent into Claim, Auth, or Eligibility."""
+    intent: Literal["CLAIM", "ELIGIBILITY", "AUTH", "TRANSFER", "UNKNOWN"] = Field(
+        ..., 
+        description="Return 'CLAIM' for Claims, 'ELIGIBILITY' for Eligibility, 'AUTH' for Authorization, 'TRANSFER' for Transfer, 'UNKNOWN' for unknown."
+    )
 
+class BinaryConfirmationOutputSchema(BaseModel):
+    """Schema for validating Yes/No confirmation responses."""
+    confirmation: Literal["1", "2"] = Field(
+        ..., 
+        description="Return '1' if the user confirms (Yes, Correct, Right, Yeah, Yep, Sure, OK, That matches). Return '2' if the user denies (No, Wrong, Incorrect, Wait, Stop, I don't think so)."
+    )
 
-class Intent(str, Enum):
-    CLAIM_STATUS = "CLAIM_STATUS"
-    AUTH_STATUS = "AUTH_STATUS"
-    ELIGIBILITY = "ELIGIBILITY"
-    UNKNOWN = "UNKNOWN"
-    TEST_FLOW = "TEST_FLOW"
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
+class DOBExtractorOutputSchema(BaseModel):
+    """Schema for extracting and formatting a Date of Birth."""
+    extracted_dob: str = Field(
+        ..., 
+        description="The date of birth formatted strictly as MM/DD/YYYY (e.g., 01/23/2004). If the date is invalid or missing, return an empty string."
+    )
 
-class CallerType(str, Enum):
-    PATIENT = "PATIENT"
-    PROVIDER = "PROVIDER"
-    UNKNOWN = "UNKNOWN"
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
+class MultiClassValidatorOutputSchema(BaseModel):
+    """Schema for handling final menu selections (Repeat, Exit, etc)."""
+    selection: Literal["9", "*", "8", "4"] = Field(
+        ..., 
+        description="Return '9' for Repeat, '*' for Exit/End, or '8' to go back to the start. Return '4' for Customer Service or not information user want to find."
+    )
 
-class FlowPhase(str, Enum):
-    CALL_START = "CALL_START"
-    INTENT_CAPTURE = "INTENT_CAPTURE"
-    CLAIM_FLOW = "CLAIM_FLOW"
-    AUTH_FLOW = "AUTH_FLOW"
-    ELIGIBILITY_FLOW = "ELIGIBILITY_FLOW"
-    TEST_FLOW = "TEST_FLOW"
-    RESULT_MENU = "RESULT_MENU"
-    TRANSFER = "TRANSFER"
-    END = "END"
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
+class RoleClassifierOutputSchema(BaseModel):
+    """Schema for classifying the user's role into Patient or Provider."""
+    user_role: Literal["1", "2", "0"] = Field(
+        ...,
+        description="Return '1' for Patient, '2' for Provider, or '0' for Fallback."
+    )
 
-@dataclass
-class SlotState:
-    # Shared slots
-    member_id: Optional[str] = None
-    dob: Optional[str] = None
-    service_date: Optional[str] = None
-    caller_type: Optional[CallerType] = None
-    npi_tax_id: Optional[str] = None
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
-    # Test flow slots
-    full_name: Optional[str] = None
-    birthdate: Optional[str] = None
+class MemberIDExtractorOutputSchema(BaseModel):
+    """Schema for extracting and formatting a Member ID."""
+    extracted_member_id: str = Field(
+        ...,
+        description="The member ID formatted strictly as a continuous string of digits. If the ID is invalid or missing, return an empty string."
+    )
 
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
-@dataclass
-class ConversationState:
-    phase: FlowPhase = FlowPhase.CALL_START
-    intent: Intent = Intent.UNKNOWN
-    slots: SlotState = field(default_factory=SlotState)
-    retries: Dict[str, int] = field(default_factory=dict)
-    last_prompt: Optional[str] = None
-    last_summary: Optional[str] = None
-    last_confirmed_field: Optional[str] = None
-    last_user_utterance: Optional[str] = None
-    current_field: Optional[str] = None
-    pending_value: Optional[str] = None
-    awaiting_confirmation: bool = False
+class NPIExtractorOutputSchema(BaseModel):
+    """Schema for extracting and formatting a NPI."""
+    extracted_npi: str = Field(
+        ...,
+        description="The NPI formatted strictly as a continuous string of digits. If the NPI is invalid or missing, return an empty string."
+    )
 
-    def reset_slots(self) -> None:
-        self.slots = SlotState()
+    command: Literal["TRANSFER", "MAIN_MENU", "None"] | str = Field(
+        ...,
+        description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
+    )
 
-    def reset_retries(self) -> None:
-        self.retries = {}

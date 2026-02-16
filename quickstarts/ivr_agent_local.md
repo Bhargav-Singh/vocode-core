@@ -16,7 +16,7 @@ before wiring telephony or full backend integrations.
 - Python >= 3.10
 - Project dependencies installed (recommended: `poetry install`)
 - CLI mode: no API keys required.
-- Audio mode: requires `OPENAI_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`.
+- Audio mode: requires `OPENAI_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`, `GOOGLE_API_KEY`.
 
 ## Run (CLI Test Flow)
 From the repo root:
