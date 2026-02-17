@@ -3,6 +3,7 @@ import queue
 from vocode.streaming.models.audio import AudioEncoding
 from vocode.streaming.models.transcriber import GoogleTranscriberConfig, Transcription
 from vocode.streaming.transcriber.base_transcriber import BaseThreadAsyncTranscriber
+from loguru import logger
 
 
 # TODO: make this nonblocking so it can run in the main thread, see speech.async_client.SpeechAsyncClient
@@ -13,15 +14,22 @@ class GoogleTranscriber(BaseThreadAsyncTranscriber[GoogleTranscriberConfig]):
     ):
         super().__init__(transcriber_config)
 
+        from google.api_core.client_options import ClientOptions
         import google.auth
         from google.cloud import speech
 
-        google.auth.default()
+        if transcriber_config.api_key:
+            client_options = ClientOptions(api_key=transcriber_config.api_key)
+        else:
+            client_options = None
+            google.auth.default()
+
         self.speech = speech
 
         self._ended = False
         self.google_streaming_config = self.create_google_streaming_config()
-        self.client = self.speech.SpeechClient()
+        # self.client = self.speech.SpeechClient()
+        self.client = self.speech.SpeechClient(client_options=client_options)
         self.is_ready = False
         if self.transcriber_config.endpointing_config:
             raise Exception("Google endpointing config not supported yet")
@@ -78,6 +86,7 @@ class GoogleTranscriber(BaseThreadAsyncTranscriber[GoogleTranscriberConfig]):
 
         top_choice = result.alternatives[0]
         message = top_choice.transcript
+        logger.debug(f"Google STT Response: message={message}")
         confidence = top_choice.confidence
 
         self.produce_nonblocking(

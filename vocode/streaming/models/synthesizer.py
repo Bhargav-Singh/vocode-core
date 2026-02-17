@@ -93,6 +93,7 @@ class GoogleSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.GOOGLE.val
     voice_name: str = DEFAULT_GOOGLE_VOICE_NAME
     pitch: float = DEFAULT_GOOGLE_PITCH
     speaking_rate: float = DEFAULT_GOOGLE_SPEAKING_RATE
+    api_key: Optional[str] = None
 
 
 ELEVEN_LABS_ADAM_VOICE_ID = "pNInz6obpgDQGcFmaJgB"

@@ -4,6 +4,7 @@ import wave
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from google.api_core.client_options import ClientOptions
 import google.auth
 from google.cloud import texttospeech_v1beta1 as tts  # type: ignore
 
@@ -19,10 +20,14 @@ class GoogleSynthesizer(BaseSynthesizer[GoogleSynthesizerConfig]):
     ):
         super().__init__(synthesizer_config)
 
-        google.auth.default()
+        if synthesizer_config.api_key:
+            client_options = ClientOptions(api_key=synthesizer_config.api_key)
+        else:
+            client_options = None
+            google.auth.default()
 
         # Instantiates a client
-        self.client = tts.TextToSpeechClient()
+        self.client = tts.TextToSpeechClient(client_options=client_options)
 
         # Build the voice request, select the language code ("en-US") and the ssml
         # voice gender ("neutral")
@@ -41,6 +46,10 @@ class GoogleSynthesizer(BaseSynthesizer[GoogleSynthesizerConfig]):
         )
         self.thread_pool_executor = ThreadPoolExecutor(max_workers=1)
 
+    @classmethod
+    def get_voice_identifier(cls, synthesizer_config: GoogleSynthesizerConfig) -> str:
+        return synthesizer_config.voice_name
+
     def synthesize(self, message: str) -> Any:
         synthesis_input = tts.SynthesisInput(text=message)
 
@@ -51,7 +60,7 @@ class GoogleSynthesizer(BaseSynthesizer[GoogleSynthesizerConfig]):
                 input=synthesis_input,
                 voice=self.voice,
                 audio_config=self.audio_config,
-                enable_time_pointing=[tts.SynthesizeSpeechRequest.TimepointType.SSML_MARK],
+                enable_time_pointing=[1],  # SSML_MARK or [tts.SynthesizeSpeechRequest.TimepointType.SSML_MARK]
             )
         )
 

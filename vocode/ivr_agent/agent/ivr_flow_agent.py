@@ -38,15 +38,12 @@ class IVRFlowAgent(RespondAgent[ChatGPTAgentConfig]):
         # 3. Specific flags
         self.dry_run = dry_run     # If true, don't actually call real backends
         self.use_llm_rephrase = use_llm_rephrase  # "Polish" the text?
-        self.google_api_key = google_api_key
 
         # 4. The "Ears" and "Understanding"
         self.openai_client: Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
-        self.parser: Optional[LLMUtteranceParser] = None
         self.openai_client = instantiate_openai_client(agent_config)
         if not self.openai_client.api_key:
             raise ValueError("OPENAI_API_KEY must be set in environment or passed in")
-        self.parser = LLMUtteranceParser(self.openai_client, self._get_model_name())
 
     def _get_model_name(self) -> str:
         if self.agent_config.azure_params:
@@ -79,37 +76,45 @@ class IVRFlowAgent(RespondAgent[ChatGPTAgentConfig]):
         is_interrupt: bool = False,
         bot_was_in_medias_res: bool = False,
     ) -> AsyncGenerator[GeneratedResponse, None]:
-        
-        # 1. Setup LangGraph Config with Conversation ID
+
+        # 1. Setup LangGraph Config
         config = {"configurable": {"thread_id": conversation_id}}
-        
         logger.info(f"Generating response for thread {conversation_id}: {human_input}")
 
-        # 2. Check Graph State (Prime if New)
-        # If this thread has no history, we must initialize it.
-        # The initialization runs the graph up to the first 'interrupt' (Greeting Node).
+        # 2. Check Graph State
         current_state = await parent_graph.aget_state(config)
-        
-        if not current_state.next:
+        is_new_session = not current_state.next
+
+        # 3. Handle Initialization (The Fix)
+        if is_new_session:
             logger.info("Initializing new graph session")
-            # This executes 'greet_and_listen' and pauses at the interrupt
+            # Run until the first interrupt (The Greeting)
             await parent_graph.ainvoke({"dialogue_status": "active"}, config)
+            
+            # If the user hasn't said anything yet (just connecting), 
+            # we stop here and return the Greeting.
+            if not human_input.strip():
+                snapshot = await parent_graph.aget_state(config)
+                # Logic to extract greeting is shared below, so we can skip the 'resume' step
+            else:
+                # If user provided input immediately (barge-in), we resume immediately
+                await parent_graph.ainvoke(Command(resume=human_input), config)
+                snapshot = await parent_graph.aget_state(config)
 
-        # 3. Resume Graph with User Input
-        # We pass the user's text to the node currently waiting at 'interrupt'
-        await parent_graph.ainvoke(Command(resume=human_input), config)
+        else:
+            # 4. Standard Resume (Existing Session)
+            # We pass the user's text to the node currently waiting at 'interrupt'
+            await parent_graph.ainvoke(Command(resume=human_input), config)
+            snapshot = await parent_graph.aget_state(config)
 
-        # 4. Retrieve the Bot's Response
-        # The graph has now run to the NEXT interrupt (or finished).
-        # We inspect the current state to find the 'message_to_play'.
-        snapshot = await parent_graph.aget_state(config)
-        
-        message_text = "Sorry i don't getting your answer." # Fallback
-        
+
+        # 5. Retrieve the Bot's Response (Matches your CLI logic)
+        message_text = "Sorry I didn't get that." # Fallback
+
         if snapshot.tasks and snapshot.tasks[0].interrupts:
             # Retrieve the payload passed to interrupt({...}) in the node
             payload = snapshot.tasks[0].interrupts[0].value
-            message_text = payload.get("message_to_play", "")
+            message_text = payload.get("message_to_play", "Sorry I didn't get that.")
             
             # Check for termination signal
             if payload.get("input_type") == "none":
@@ -120,11 +125,11 @@ class IVRFlowAgent(RespondAgent[ChatGPTAgentConfig]):
             logger.info("Graph execution completed (END reached).")
             # Handle implicit end of flow if necessary
 
-        # 5. Optional Polish
+        # 6. Optional Polish
         if self.use_llm_rephrase and message_text:
             message_text = await self._rephrase(message_text)
 
-        # 6. Yield Response
+        # 7. Yield Response
         yield GeneratedResponse(
             message=BaseMessage(text=message_text), 
             is_interruptible=True

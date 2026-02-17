@@ -19,8 +19,6 @@ if str(REPO_ROOT) not in sys.path:
 from vocode.helpers import create_streaming_microphone_input_and_speaker_output
 from vocode.ivr_agent.agent.ivr_flow_agent import IVRFlowAgent
 from langgraph.types import Command
-# from vocode.ivr_agent.flows.test_flow import handle_test_flow_input, start_test_flow
-# from vocode.ivr_agent.state.commands import apply_command, detect_command
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
 from vocode.streaming.models.message import BaseMessage
@@ -33,6 +31,10 @@ from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
 from vocode.streaming.transcriber.deepgram_transcriber import DeepgramTranscriber
 from vocode.ivr_agent.flows.intent_router import parent_graph 
+from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
+from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
+from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
+from vocode.streaming.models.transcriber import GoogleTranscriberConfig
 
 def load_env_if_available(*paths: str) -> None:
     try:
@@ -154,8 +156,9 @@ async def main():
 
     # Resolve API keys
     openai_key = require("OPENAI_API_KEY", settings.openai_api_key or os.getenv("OPENAI_API_KEY"))
-    deepgram_key = require("DEEPGRAM_API_KEY", settings.deepgram_api_key or os.getenv("DEEPGRAM_API_KEY"))
+    # deepgram_key = require("DEEPGRAM_API_KEY", settings.deepgram_api_key or os.getenv("DEEPGRAM_API_KEY"))
     eleven_key = require("ELEVENLABS_API_KEY", settings.elevenlabs_api_key or os.getenv("ELEVENLABS_API_KEY"))
+    google_key = require("GOOGLE_API_KEY", settings.google_api_key or os.getenv("GOOGLE_API_KEY"))
 
     # Select audio devices
     microphone_input, speaker_output = create_streaming_microphone_input_and_speaker_output(
@@ -163,21 +166,16 @@ async def main():
         input_device_name=settings.input_device_name,
         output_device_name=settings.output_device_name,
         mic_sampling_rate=settings.mic_sampling_rate,
-        speaker_sampling_rate=settings.elevenlabs_sampling_rate,
+        speaker_sampling_rate=16000,
     )
 
     # Build the conversation pipeline
     conversation = StreamingConversation(
         output_device=speaker_output,
-        transcriber=DeepgramTranscriber(
-            DeepgramTranscriberConfig.from_input_device(
+        transcriber=GoogleTranscriber(
+            GoogleTranscriberConfig.from_input_device(
                 microphone_input,
-                endpointing_config=PunctuationEndpointingConfig(),
-                api_key=deepgram_key,
-                language=settings.deepgram_language,
-                model=settings.deepgram_model,
-                tier=settings.deepgram_tier,
-                version=settings.deepgram_version,
+                api_key=google_key,
             ),
         ),
         agent=IVRFlowAgent(
@@ -206,15 +204,15 @@ async def main():
             ),
             dry_run=True,
             use_llm_rephrase=False, # Disable rephrase to reduce latency for now
-            google_api_key=settings.google_api_key,
         ),
-        synthesizer=ElevenLabsSynthesizer(
-            ElevenLabsSynthesizerConfig.from_output_device(
+        synthesizer=GoogleSynthesizer(
+            GoogleSynthesizerConfig.from_output_device(
                 speaker_output,
-                api_key=eleven_key,
-                voice_id=settings.elevenlabs_voice_id,
-                model_id=settings.elevenlabs_model_id,
-                optimize_streaming_latency=settings.elevenlabs_opt_latency,
+                language_code="en-US",
+                voice_name="en-US-Journey-D",
+                pitch=0,
+                speaking_rate=1.2,
+                api_key=google_key,
             ),
         ),
     )
