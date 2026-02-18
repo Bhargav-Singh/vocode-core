@@ -147,7 +147,7 @@ class IVRFlowAgent(AsyncMixin, RespondAgent[ChatGPTAgentConfig]):
         
         elif not snapshot.next:
             logger.info("Graph execution completed (END reached).")
-            message_text = "thanks for using our service. Now end the call. Have a great day!"
+            message_text = snapshot.values.get("message_to_play", "Thanks for using our service. Now end the call. Have a great day!")
             # Handle implicit end of flow if necessary
 
         # 6. Optional Polish

@@ -80,3 +80,14 @@ class NPIExtractorOutputSchema(BaseModel):
         description="Return 'TRANSFER' if the user wants to transfer to a representative. Return 'MAIN_MENU' if the user wants to go back to the main menu. Return 'None' if the user provided the required information."
     )
 
+class CustomerServiceOutputSchema(BaseModel):
+    """Schema for handling the Customer Service Agent"""
+    is_exit: Literal["1", "0"] = Field(
+        ...,
+        description="Return '1' if the user wants to exit, '0' otherwise."
+    )
+    response: str = Field(
+        ...,
+        description="Return your response."
+    )
+

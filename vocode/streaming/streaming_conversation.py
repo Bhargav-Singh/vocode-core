@@ -777,9 +777,10 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     # Stop the phone call after some retries to prevent infinitely long call where human is just silent.
                     await self.action_on_idle()
                 self.is_human_still_there = False
-                await self.send_single_message(
-                    message=BaseMessage(text=random.choice(CHECK_HUMAN_PRESENT_MESSAGE_CHOICES)),
-                )
+                self.receive_message("repeat") 
+                # await self.send_single_message(
+                #     message=BaseMessage(text=random.choice(CHECK_HUMAN_PRESENT_MESSAGE_CHOICES)),
+                # )
                 check_human_present_count += 1
             # wait till the idle time would have passed the threshold if no action occurs
             await asyncio.sleep(self.idle_time_threshold / 2)

@@ -13,23 +13,81 @@ from vocode.ivr_agent.utilities.state_utils import get_reset_state_update
 from vocode.ivr_agent.flows.claim_flow import ClaimFlow
 from vocode.ivr_agent.flows.eligibility_flow import EligibilityFlow
 from vocode.ivr_agent.flows.auth_flow import AuthFlow
+from langchain_core.prompts import ChatPromptTemplate
 
 # --- Import Schema ---
 # (Assuming you put the class above in your schemas file)
-from vocode.ivr_agent.state.models import IntentClassifierOutputSchema
+from vocode.ivr_agent.state.models import IntentClassifierOutputSchema, CustomerServiceOutputSchema
 
 import asyncio
 
 
+customer_service_prompt = """
+### Role and Goal:
+    You are a friendly and efficient Customer Service Agent for "QuickCap". Your goal is to assist users with their inquiries, provide clear and concise responses, and accurately detect when the user wishes to end the conversation.
+
+### Output Schema:
+    You must return a valid JSON object wrapped in a markdown code block that matches this structure:
+    {{
+        "is_exit": "1" | "0",  // "1" if the user wants to end/exit, "0" to continue.
+        "response": "string"   // Your natural language response to the user.
+    }}
+    - Do not add any conversational text outside the JSON object.
+
+### Logic & Instructions:
+    1. **Generate Response (`response`)**:
+        - Provide helpful, professional, and concise answers to user queries regarding QuickCap services.
+        - Maintain a polite and supportive tone.
+        - If the user input is unclear, ask a clarifying question.
+        - **Constraint:** Keep responses brief (under 2-3 sentences) suitable for a voice/chat interface.
+
+    2. **Analyze Exit Intent (`is_exit`)**:
+        - **Return "1"** if the user indicates they are finished, says goodbye, or explicitly asks to end the call.
+            * *Keywords:* Bye, Goodbye, That's all, I'm done, Hang up, No thanks, Have a good day.
+        - **Return "0"** for all other interactions where the conversation should continue (questions, statements, greetings, etc.).
+
+### Examples:
+    - User: "Hi, I have a question about my account."
+      -> {{"is_exit": "0", "response": "Hello! I'd be happy to help with your QuickCap account. What specific details do you need?"}}
+
+    - User: "What are your operating hours?"
+      -> {{"is_exit": "0", "response": "Our support team is available Monday through Friday, from 9 AM to 6 PM EST."}}
+
+    - User: "Thank you, that was all I needed."
+      -> {{"is_exit": "1", "response": "You're very welcome! Thank you for calling QuickCap. Have a great day!"}}
+
+    - User: "No, I don't have any other questions. Bye."
+      -> {{"is_exit": "1", "response": "Understood. Goodbye and take care!"}}
+
+    - User: "Wait, actually one more thing."
+      -> {{"is_exit": "0", "response": "Of course! What else can I help you with?"}}
+"""
+
+CUSTOMER_SERVICE_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", customer_service_prompt),
+    ("human", "{user_input}"),
+])
+
 class IntentRouter:
     def __init__(self, LLM):
         self.LLM = LLM
+        self.MAX_RETRIES = 3
 
         ## Initialize Subgraphs objects
         self.claim_flow = ClaimFlow(LLM)
         self.eligibility_flow = EligibilityFlow(LLM)
         self.auth_flow = AuthFlow(LLM)
 
+    # --- Helper Functions ---
+    def get_retries(self, state: IVRState, key: str) -> int: 
+        return state.get("retries", {}).get(key, 0)
+    
+    def increment_retries(self, state: IVRState, key: str) -> dict:
+        curr = state.get("retries", {}).copy()
+        curr[key] = curr.get(key, 0) + 1
+        return {"retries": curr}
+
+    # --- Building Graph ---
     async def build_graph(self):
         builder = StateGraph(IVRState)
 
@@ -46,18 +104,42 @@ class IntentRouter:
             """
             # Logic: If returning from Main Menu, maybe say "What else?" 
             # For now, we keep it standard.
-            
-            payload = {
-                "message_to_play": "Hello, I am your AI assistant. I can help with Claims, Eligibility, or Authorization. How can I help you today?",
-                "input_type": "varied"
-            }
-            
-            # 1. Wait for user input
-            user_input = interrupt(payload)
-            
-            return {"last_user_input": user_input, "dialogue_status": "active"}
 
-        async def classify_intent_node(state: IVRState):
+            retry_count = self.get_retries(state, "greet")
+
+            # 1. Determine Message based on retries
+            if retry_count == 0:
+                msg = "Hello, I am your AI assistant. I can help with Claims, Eligibility, or Authorization. How can I help you today?"
+            else:
+                msg = "I didn't catch that. Please tell me if you need help with Claims, Eligibility, or Authorization."
+
+            # 2. Wait for user input
+            user_input = interrupt({
+                "message_to_play": msg,
+                "input_type": "varied"
+            })
+
+            # 3. Check for Empty Input / Silence (Simple Validation)
+            # If input is empty, treat as failure and loop back
+            if not user_input or not user_input.strip():
+                new_retries = self.increment_retries(state, "greet")
+                
+                # Check Max Retries
+                if new_retries["retries"]["greet"] > self.MAX_RETRIES:
+                    # Too many failures -> Transfer
+                    return Command(goto="transfer_handoff")
+                
+                # Loop back to self with incremented retry count
+                return Command(goto="greet_and_listen", update=new_retries)
+
+            # 4. Valid Input Received -> Move to Classification
+            # Reset retries on success so next time we come here (e.g. from main menu) it's fresh
+            return Command(
+                goto="classify_intent", 
+                update={"last_user_input": user_input, "dialogue_status": "active"}
+            )
+            
+        async def classify_intent(state: IVRState):
             """
             Analyzes the user's input to decide which Flow (Subgraph) to activate.
             """
@@ -71,20 +153,71 @@ class IntentRouter:
             parsed = result['parsed']
             
             intent = parsed.intent # CLAIM, ELIGIBILITY, AUTH, TRANSFER, UNKNOWN
+
+            # 2. Handle Unknown Intent as a "Retry" 
+            # If the LLM says "UNKNOWN", we treat it as a failed attempt at the greeting stage
+            if intent == "UNKNOWN":
+                new_retries = self.increment_retries(state, "greet")
+                if new_retries["retries"]["greet"] > self.MAX_RETRIES:
+                     return Command(goto="transfer_handoff")
+                return Command(goto="greet_and_listen", update=new_retries)
             
-            # 2. Update State
-            # We set 'flow_name' so we know where we are, but 'intent' drives the immediate router
-            return {
-                "intent": intent, 
-                "flow_name": intent if intent in ["CLAIM", "ELIGIBILITY", "AUTH"] else None
-            }
+            # 3. Valid Intent -> Update State and Route
+            return Command(
+                goto="route_launch",
+                update={
+                    "intent": intent, 
+                    "flow_name": intent if intent in ["CLAIM", "ELIGIBILITY", "AUTH"] else None,
+                    "retries": {}
+                }
+            )
 
         async def transfer_handoff_node(state: IVRState):
             """
             Final node if the user wants a human.
             """
+
+            user_input = interrupt({
+                "message_to_play": "Please hold while I transfer you to a representative.....",
+                "input_type": "none", # 'none' signal to telephony to hangup/transfer
+            })
+
+            return Command(goto="execute_transfer", update={"last_user_input": "Hello, I am Agent from QuickCap. How can i help you?"})
+
+        
+        async def execute_transfer(state: IVRState):
+            """
+            Executes the transfer to a human agent.
+            """
+
+            message_text = state.get("last_user_input", "Hello, I am Agent from QuickCap. How can i help you?")
+
+            user_input = interrupt({
+                "message_to_play": message_text,
+                "input_type": "varied",
+            })
+
+            structured_llm = self.LLM.with_structured_output(CustomerServiceOutputSchema, include_raw=True)
+            chain = CUSTOMER_SERVICE_PROMPT | structured_llm
+            
+            result = await chain.ainvoke({"user_input": user_input})
+            parsed = result['parsed']
+
+            ## check user wants to exit
+            is_exit = parsed.is_exit
+
+            if is_exit == "1" or is_exit == "True":
+                return Command(goto="final_node")
+            
+            else:
+                return Command(goto="execute_transfer", update={"last_user_input": parsed.response})
+
+        async def final_node(state: IVRState):
+            """
+            Final node if the user wants to exit.
+            """
             return {
-                "message_to_play": "Please hold while I transfer you to a representative.",
+                "message_to_play": "Thank you for calling QuickCap. Goodbye!",
                 "input_type": "none", # 'none' signal to telephony to hangup/transfer
                 "dialogue_status": "complete"
             }
@@ -100,23 +233,23 @@ class IntentRouter:
 
         # --- Routers ---
 
-        async def route_launch(state: IVRState) -> Literal["claims_flow", "eligibility_flow", "auth_flow", "transfer_handoff", "greet_and_listen"]:
+        async def route_launch(state: IVRState):
             """
             Decides which subgraph to enter based on the classified intent.
             """
             intent = state.get("intent")
             
             if intent == "CLAIM":
-                return "claims_flow"
+                return Command(goto="claims_flow")
             elif intent == "ELIGIBILITY":
-                return "eligibility_flow"
+                return Command(goto="eligibility_flow")
             elif intent == "AUTH":
-                return "auth_flow"
+                return Command(goto="auth_flow")
             elif intent == "TRANSFER":
-                return "transfer_handoff"
+                return Command(goto="transfer_handoff")
             
             # If Unknown, loop back (or you could route to fallback_node first)
-            return "greet_and_listen"
+            return Command(goto="greet_and_listen")
 
         async def route_after_subgraph(state: IVRState) -> Literal["greet_and_listen", "transfer_handoff", END]:
             """
@@ -141,11 +274,13 @@ class IntentRouter:
    
         # --- Add Nodes ---
         builder.add_node("greet_and_listen", greet_and_listen)
-        builder.add_node("classify_intent", classify_intent_node)
+        builder.add_node("classify_intent", classify_intent)
         builder.add_node("transfer_handoff", transfer_handoff_node)
+        builder.add_node("route_launch", route_launch)
+        builder.add_node("execute_transfer", execute_transfer)
+        builder.add_node("final_node", final_node)
         
         # --- Add Subgraphs as Nodes ---
-        # When execution hits these nodes, it enters the compiled subgraph
         builder.add_node("claims_flow", self.claims_graph)
         builder.add_node("eligibility_flow", self.eligibility_graph)
         builder.add_node("auth_flow", self.auth_graph)
@@ -153,24 +288,14 @@ class IntentRouter:
         # --- Edges ---
         # 1. Start -> Greet
         builder.add_edge(START, "greet_and_listen")
-        
-        # 2. Greet -> Classify
-        builder.add_edge("greet_and_listen", "classify_intent")
-        
-        # 3. Classify -> Router (Enter Subgraph)
-        builder.add_conditional_edges(
-            "classify_intent", 
-            route_launch
-        )
-        
-        # 4. Subgraphs -> Router (Return from Subgraph)
-        # All subgraphs share the same exit logic router
+                
+        # 2. Subgraphs -> Router (Return from Subgraph)
         builder.add_conditional_edges("claims_flow", route_after_subgraph)
         builder.add_conditional_edges("eligibility_flow", route_after_subgraph)
         builder.add_conditional_edges("auth_flow", route_after_subgraph)
         
-        # 5. Transfer -> End
-        builder.add_edge("transfer_handoff", END)
+        # 3. Transfer -> End
+        builder.add_edge("final_node", END)
         
         # --- Compile ---
         checkpointer = InMemorySaver()

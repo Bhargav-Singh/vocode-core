@@ -21,6 +21,8 @@ class ClaimFlow:
         self.LLM = LLM
         self.MAX_RETRIES = 3
 
+    # --- Helper Functions ---
+
     def get_retries(self, state: IVRState, key: str) -> int: 
         return state.get("retries", {}).get(key, 0)
 
@@ -29,6 +31,7 @@ class ClaimFlow:
         curr[key] = curr.get(key, 0) + 1
         return {"retries": curr}
 
+    # --- Building Graph ---
     async def build_graph(self):
         wf = StateGraph(IVRState)
     

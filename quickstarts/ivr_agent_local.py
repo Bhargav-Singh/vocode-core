@@ -193,6 +193,8 @@ async def main():
                 ),
                 prompt_preamble="You are a helpful IVR assistant.", # Simplistic preamble, real logic is in graph
                 interrupt_sensitivity="high",
+                num_check_human_present_times=4,
+                allowed_idle_time_seconds=10,
             ),
             google_api_key=google_key,
             dry_run=True,
