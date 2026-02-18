@@ -30,11 +30,12 @@ from vocode.streaming.models.transcriber import (
 from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
 from vocode.streaming.transcriber.deepgram_transcriber import DeepgramTranscriber
-from vocode.ivr_agent.flows.intent_router import parent_graph 
+from vocode.ivr_agent.flows.intent_router import IntentRouter 
 from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
 from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
 from vocode.streaming.models.transcriber import GoogleTranscriberConfig
+from vocode.ivr_agent.utilities.llm_initializer import Gemini
 
 def load_env_if_available(*paths: str) -> None:
     try:
@@ -99,6 +100,20 @@ async def run_cli(dry_run: bool = True) -> None:
     """
     Runs the IVR agent in a local command-line loop using LangGraph.
     """
+
+    # Load env files
+    load_env_if_available("talkbot.env", ".env")
+
+    settings = Settings()
+
+    google_key = require("GOOGLE_API_KEY", settings.google_api_key or os.getenv("GOOGLE_API_KEY"))
+
+    gemini = Gemini(api_key=google_key)
+    llm = gemini.get_llm()
+
+    intent_router = IntentRouter(llm)
+    parent_graph = await intent_router.build_graph()
+    
     # 1. Setup State
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
@@ -120,7 +135,7 @@ async def run_cli(dry_run: bool = True) -> None:
     # 4. Conversation Loop
     while True:
         user_text = input("You: ").strip()
-        if user_text.lower() in ("exit", "quit"):
+        if user_text.lower() in ("exit", "quit", "stop"):
             print("Conversation ended.")
             break
 
@@ -155,9 +170,6 @@ async def main():
     settings = Settings()
 
     # Resolve API keys
-    openai_key = require("OPENAI_API_KEY", settings.openai_api_key or os.getenv("OPENAI_API_KEY"))
-    # deepgram_key = require("DEEPGRAM_API_KEY", settings.deepgram_api_key or os.getenv("DEEPGRAM_API_KEY"))
-    eleven_key = require("ELEVENLABS_API_KEY", settings.elevenlabs_api_key or os.getenv("ELEVENLABS_API_KEY"))
     google_key = require("GOOGLE_API_KEY", settings.google_api_key or os.getenv("GOOGLE_API_KEY"))
 
     # Select audio devices
@@ -169,29 +181,8 @@ async def main():
         speaker_sampling_rate=16000,
     )
 
-    # Build the conversation pipeline
-    conversation = StreamingConversation(
-        output_device=speaker_output,
-        transcriber=GoogleTranscriber(
-            GoogleTranscriberConfig.from_input_device(
-                microphone_input,
-                api_key=google_key,
-            ),
-        ),
-        agent=IVRFlowAgent(
+    ivr_agent = await IVRFlowAgent(
             ChatGPTAgentConfig(
-                openai_api_key=openai_key,
-                base_url_override=(settings.openai_base_url or os.getenv("OPENAI_BASE_URL")),
-                model_name=(
-                    settings.openai_model_name
-                    or os.getenv("OPENAI_MODEL_NAME")
-                    or "gpt-3.5-turbo-1106"
-                ),
-                temperature=(
-                    settings.openai_temperature
-                    if settings.openai_temperature is not None
-                    else float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
-                ),
                 # Note: The initial message here is handled by StreamingConversation. 
                 # The Graph also produces a greeting. Typically, you align them or let the Graph handle logic.
                 initial_message=BaseMessage(
@@ -201,10 +192,23 @@ async def main():
                     )
                 ),
                 prompt_preamble="You are a helpful IVR assistant.", # Simplistic preamble, real logic is in graph
+                interrupt_sensitivity="high",
             ),
+            google_api_key=google_key,
             dry_run=True,
             use_llm_rephrase=False, # Disable rephrase to reduce latency for now
+        )
+
+    # Build the conversation pipeline
+    conversation = StreamingConversation(
+        output_device=speaker_output,
+        transcriber=GoogleTranscriber(
+            GoogleTranscriberConfig.from_input_device(
+                microphone_input,
+                api_key=google_key,
+            ),
         ),
+        agent=ivr_agent,
         synthesizer=GoogleSynthesizer(
             GoogleSynthesizerConfig.from_output_device(
                 speaker_output,
