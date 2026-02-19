@@ -10,7 +10,7 @@ from langgraph.types import Command
 
 from vocode.streaming.agent.base_agent import GeneratedResponse, RespondAgent
 from vocode.streaming.agent.chat_gpt_agent import instantiate_openai_client
-from vocode.streaming.models.agent import ChatGPTAgentConfig
+from vocode.streaming.models.agent import ChatGPTAgentConfig, GoogleAgentConfig
 from vocode.streaming.models.message import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -48,11 +48,10 @@ class AsyncMixin:
         return self.__initobj().__await__()
 
 
-class IVRFlowAgent(AsyncMixin, RespondAgent[ChatGPTAgentConfig]):
+class IVRFlowAgent(AsyncMixin, RespondAgent[GoogleAgentConfig]):
     async def __ainit__(
         self,
-        agent_config: ChatGPTAgentConfig,
-        google_api_key: str,
+        agent_config: GoogleAgentConfig,
         dry_run: bool = True,
         use_llm_rephrase: bool = True,
         **kwargs,
@@ -62,7 +61,7 @@ class IVRFlowAgent(AsyncMixin, RespondAgent[ChatGPTAgentConfig]):
         RespondAgent.__init__(self, agent_config=agent_config, **kwargs)
 
         # 2. Set attributes (Logic moved from __init__)
-        self.google_api_key = google_api_key
+        self.google_api_key = agent_config.google_api_key
         self.dry_run = dry_run
         
         self.use_llm_rephrase = use_llm_rephrase

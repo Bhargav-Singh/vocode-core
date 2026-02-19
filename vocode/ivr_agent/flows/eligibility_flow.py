@@ -13,6 +13,7 @@ from vocode.ivr_agent.state.models import (
 from vocode.ivr_agent.policies.prompt_templates import PROMPT
 from vocode.ivr_agent.utilities.state_utils import get_reset_state_update
 import asyncio
+from vocode.ivr_agent.state.commands import number_mappings
 
 
 class EligibilityFlow:
@@ -30,7 +31,7 @@ class EligibilityFlow:
         return {"retries": curr}
 
     # --- Building Graph ----
-    
+
     async def build_graph(self):
         wf = StateGraph(IVRState)
 
@@ -68,9 +69,17 @@ class EligibilityFlow:
             # Safety check
             if not member_id: return Command(goto="ask_member_id")
 
-            member_id = " ".join(member_id)
+            spoken_chars = []
+
+            for ch in member_id:
+                if ch in number_mappings:
+                    spoken_chars.append(number_mappings[ch])
+                else:
+                    spoken_chars.append(ch)
+
+            member_id = " <break time='50ms'/> ".join(spoken_chars)
             
-            confirmation = interrupt({"message_to_play": f"Member ID is <say-as interpret-as='digits'>{member_id}</say-as>. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"Member ID is {member_id}. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -122,7 +131,7 @@ class EligibilityFlow:
             dob = state.get("temp_dob")
             if not dob: return Command(goto="ask_dob")
             
-            confirmation = interrupt({"message_to_play": f"DOB is <say-as interpret-as='date' format='mdy'>{dob}</say-as>. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"Your Date of Birth is <break time='300ms'/> <say-as interpret-as='date' format='mdy'>{dob}</say-as>. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})

@@ -37,6 +37,7 @@
 
 
     ### Examples:
+        - "I'm a member ID is 1 million to 275,689" -> {{"extracted_member_id": "1000000275689", "command": "None"}}
         - "my member id is 1 123 34" -> {{"extracted_member_id": "112334", "command": "None"}}
         - "one two three four" -> {{"extracted_member_id": "1234", "command": "None"}}
         - "id is 4 5 6 7 8" -> {{"extracted_member_id": "45678", "command": "None"}}

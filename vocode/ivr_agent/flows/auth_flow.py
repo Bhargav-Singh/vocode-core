@@ -15,7 +15,7 @@ from vocode.ivr_agent.state.models import (
 from vocode.ivr_agent.policies.prompt_templates import PROMPT
 from vocode.ivr_agent.utilities.state_utils import get_reset_state_update
 import asyncio
-
+from vocode.ivr_agent.state.commands import number_mappings
 
 
 class AuthFlow:
@@ -69,9 +69,17 @@ class AuthFlow:
             member_id = state.get("temp_member_id")
             if not member_id: return Command(goto="ask_member_id")
 
-            member_id = " ".join(member_id)
+            spoken_chars = []
 
-            confirmation = interrupt({"message_to_play": f"Member ID is <say-as interpret-as='digits'>{member_id}</say-as>. Correct?", "input_type": "single"})
+            for ch in member_id:
+                if ch in number_mappings:
+                    spoken_chars.append(number_mappings[ch])
+                else:
+                    spoken_chars.append(ch)
+
+            member_id = " <break time='50ms'/> ".join(spoken_chars)
+
+            confirmation = interrupt({"message_to_play": f"Member ID is {member_id}. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -123,7 +131,7 @@ class AuthFlow:
             dob_date = state.get("temp_dob")
             if not dob_date: return Command(goto="ask_dob") 
 
-            confirmation = interrupt({"message_to_play": f"DOB is <say-as interpret-as='date' format='mdy'>{dob_date}</say-as>. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"Your Date of Birth is <break time='300ms'/> <say-as interpret-as='date' format='mdy'>{dob_date}</say-as>. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -205,9 +213,17 @@ class AuthFlow:
             npi = state.get("temp_npi")
             if not npi: return Command(goto="ask_npi")
 
-            npi = " ".join(npi)
+            spoken_chars = []
 
-            confirmation = interrupt({"message_to_play": f"NPI number is <say-as interpret-as='digits'>{npi}</say-as>. Correct?", "input_type": "single"})
+            for ch in npi:
+                if ch in number_mappings:
+                    spoken_chars.append(number_mappings[ch])
+                else:
+                    spoken_chars.append(ch)
+
+            npi = " <break time='50ms'/> ".join(spoken_chars)
+
+            confirmation = interrupt({"message_to_play": f"your NPI number is {npi}. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})

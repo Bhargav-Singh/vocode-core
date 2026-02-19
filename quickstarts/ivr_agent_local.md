@@ -18,6 +18,19 @@ before wiring telephony or full backend integrations.
 - CLI mode: no API keys required.
 - Audio mode: requires `OPENAI_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`, `GOOGLE_API_KEY`.
 
+### 📞 Local Audio Setup for Call Transfers
+
+1. Download the [Office telephone ring](https://mixkit.co/free-sound-effects/phone-ring/) audio file.
+2. Open a terminal in the audio file's directory and start a local server:
+   ```bash
+   python -m http.server 8000
+   ```
+3. In a new terminal window, expose the server using ngrok:
+   ```bash
+   ngrok http 8000
+   ```
+4. Copy the ngrok HTTPS URL, append your filename (e.g., https://<url>.ngrok.app/ring.wav), and paste it into the transfer_handoff_node function inside vocode-core/vocode/ivr_agent/flows/intent_router.py.
+
 ## Run (CLI Test Flow)
 From the repo root:
 

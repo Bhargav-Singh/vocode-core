@@ -20,7 +20,7 @@ from vocode.helpers import create_streaming_microphone_input_and_speaker_output
 from vocode.ivr_agent.agent.ivr_flow_agent import IVRFlowAgent
 from langgraph.types import Command
 from vocode.logging import configure_pretty_logging
-from vocode.streaming.models.agent import ChatGPTAgentConfig
+from vocode.streaming.models.agent import ChatGPTAgentConfig, GoogleAgentConfig
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.synthesizer import ElevenLabsSynthesizerConfig
 from vocode.streaming.models.transcriber import (
@@ -182,7 +182,7 @@ async def main():
     )
 
     ivr_agent = await IVRFlowAgent(
-            ChatGPTAgentConfig(
+            GoogleAgentConfig(
                 # Note: The initial message here is handled by StreamingConversation. 
                 # The Graph also produces a greeting. Typically, you align them or let the Graph handle logic.
                 initial_message=BaseMessage(
@@ -195,8 +195,8 @@ async def main():
                 interrupt_sensitivity="high",
                 num_check_human_present_times=4,
                 allowed_idle_time_seconds=10,
+                google_api_key=google_key,
             ),
-            google_api_key=google_key,
             dry_run=True,
             use_llm_rephrase=False, # Disable rephrase to reduce latency for now
         )

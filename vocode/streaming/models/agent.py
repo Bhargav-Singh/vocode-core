@@ -14,6 +14,7 @@ LLM_AGENT_DEFAULT_TEMPERATURE = 1.0
 LLM_AGENT_DEFAULT_MAX_TOKENS = 256
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"
 CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-1106"
+GOOGLE_DEFAULT_MODEL_NAME = "gemini-2.0-flash"
 CHAT_GPT_AGENT_16K_MODEL_NAME = "gpt-3.5-turbo-0613-16k"
 ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
 CHAT_ANTHROPIC_DEFAULT_MODEL_NAME = "claude-3-haiku-20240307"
@@ -49,6 +50,7 @@ class AgentType(str, Enum):
     CHAT_VERTEX_AI = "agent_chat_vertex_ai"
     ECHO = "agent_echo"
     GPT4ALL = "agent_gpt4all"
+    GOOGLE = "agent_google"
     LLAMACPP = "agent_llamacpp"
     GROQ = "agent_groq"
     INFORMATION_RETRIEVAL = "agent_information_retrieval"
@@ -128,6 +130,20 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):  # type: i
     azure_params: Optional[AzureOpenAIConfig] = None
     vector_db_config: Optional[VectorDBConfig] = None
     # TODO: the below fields should moved up to AgentConfig, and their logic should live in BaseAgent
+    use_backchannels: bool = False
+    backchannel_probability: float = 0.7
+    first_response_filler_message: Optional[str] = None
+    llm_fallback: Optional[LLMFallback] = None
+
+
+class GoogleAgentConfig(AgentConfig, type=AgentType.GOOGLE.value):
+    google_api_key: str
+    prompt_preamble: str
+    model_name: str = GOOGLE_DEFAULT_MODEL_NAME
+    temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
+    max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
+    max_retries: Optional[int] = 2
+    streaming: Optional[bool] = False
     use_backchannels: bool = False
     backchannel_probability: float = 0.7
     first_response_filler_message: Optional[str] = None
