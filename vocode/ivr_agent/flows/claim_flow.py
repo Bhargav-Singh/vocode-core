@@ -39,7 +39,7 @@ class ClaimFlow:
 
         async def ask_member_id(state: IVRState):
             retry_count = self.get_retries(state, "member_id")
-            msg = "Claim Status. Please tell me the Member ID." if retry_count == 0 else "I didn't quite catch that. Please say the Member ID again, numbers only."
+            msg = "Claim Status. Can you please tell me your Member ID?" if retry_count == 0 else "Sorry, I didn't quite catch that. <break time='300ms'/> Could you please say your Member ID one more time?"
         
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
         
@@ -69,7 +69,10 @@ class ClaimFlow:
             # Safety: If temp slot is empty, go back
             if not member_id: return Command(goto="ask_member_id")
 
-            confirmation = interrupt({"message_to_play": f"Member ID is {member_id}. Correct?", "input_type": "single"})
+            member_id = " ".join(member_id)
+
+            confirmation = interrupt({"message_to_play": f"Member ID is <say-as interpret-as='digits'>{member_id}</say-as>. Correct?", "input_type": "single"})
+
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
             parsed = before_parsed['parsed']
@@ -92,7 +95,7 @@ class ClaimFlow:
 
         async def ask_dob(state: IVRState):
             retry_count = self.get_retries(state, "dob")
-            msg = "Please give me the Date of Birth." if retry_count == 0 else "Please say the Date of Birth again."
+            msg = "Please give me your Date of Birth." if retry_count == 0 else "Sorry, I didn't quite catch that. <break time='300ms'/> Could you please say your Date of Birth one more time?"
 
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
 
@@ -120,7 +123,7 @@ class ClaimFlow:
             dob_date = state.get("temp_dob")
             if not dob_date: return Command(goto="ask_dob") 
 
-            confirmation = interrupt({"message_to_play": f"DOB is {dob_date}. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"DOB is <say-as interpret-as='date' format='mdy'>{dob_date}</say-as>. Correct?", "input_type": "single"})
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
             parsed = before_parsed['parsed']
@@ -144,7 +147,7 @@ class ClaimFlow:
         async def fetch_claim_details(state: IVRState):
             # Simulate Logic: Use member_id and dob to get status
             status = "Paid" 
-            msg = f"Your claim status is {status}. Now, what do you want are you want to 'repeat' or 'check another' or 'transfer the call to customer service' or 'main menu'."
+            msg = f"Your claim status is {status}. <break time='1s'/> Now, what do you want are you want to 'repeat' or 'check another' or 'transfer the call to customer service' or 'main menu'."
             
             # Directly transition to input handler with the message
             return Command(

@@ -215,9 +215,9 @@ async def main():
             GoogleSynthesizerConfig.from_output_device(
                 speaker_output,
                 language_code="en-US",
-                voice_name="en-US-Journey-D",
+                voice_name="en-US-Neural2-D",
                 pitch=0,
-                speaking_rate=1.2,
+                speaking_rate=1.00,
                 api_key=google_key,
             ),
         ),

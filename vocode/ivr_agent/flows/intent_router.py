@@ -64,7 +64,7 @@ class IntentRouter:
             if retry_count == 0:
                 msg = "Hello, I am your AI assistant. I can help with Claims, Eligibility, or Authorization. How can I help you today?"
             else:
-                msg = "I didn't catch that. Please tell me if you need help with Claims, Eligibility, or Authorization."
+                msg = "Sorry, I didn't quite catch that. <break time='300ms'/> Please tell me if you need help with Claims, Eligibility, or Authorization."
 
             # 2. Wait for user input
             user_input = interrupt({
@@ -130,12 +130,24 @@ class IntentRouter:
             Final node if the user wants a human.
             """
 
-            user_input = interrupt({
-                "message_to_play": "Please hold while I transfer you to a representative.....",
-                "input_type": "none", # 'none' signal to telephony to hangup/transfer
-            })
+            # user_input = interrupt({
+            #     "message_to_play": "Please hold while I transfer you to a representative.....",
+            #     "input_type": "none", # 'none' signal to telephony to hangup/transfer
+            # })
 
-            return Command(goto="execute_transfer", update={"last_user_input": "Hello, I am Agent from QuickCap. How can i help you?"})
+            message = """
+            Please hold while I transfer you to a representative..... 
+            <break time='1s'/> 
+
+            <audio src="https://jazlynn-nonfictive-wade.ngrok-free.dev/mixkit-office-telephone-ring-1350.wav">
+                Transferring now.
+            </audio>
+
+            <break time='500ms'/>
+            Hello, I am John from QuickCap. How can i help you?
+            """
+
+            return Command(goto="execute_transfer", update={"last_user_input": message})
 
         
         async def execute_transfer(state: IVRState):
@@ -143,7 +155,7 @@ class IntentRouter:
             Executes the transfer to a human agent.
             """
 
-            message_text = state.get("last_user_input", "Hello, I am Agent from QuickCap. How can i help you?")
+            message_text = state.get("last_user_input", "Hello, I am John from QuickCap. How can i help you?")
 
             user_input = interrupt({
                 "message_to_play": message_text,

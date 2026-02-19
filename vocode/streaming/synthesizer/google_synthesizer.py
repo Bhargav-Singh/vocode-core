@@ -51,7 +51,7 @@ class GoogleSynthesizer(BaseSynthesizer[GoogleSynthesizerConfig]):
         return synthesizer_config.voice_name
 
     def synthesize(self, message: str) -> Any:
-        synthesis_input = tts.SynthesisInput(text=message)
+        synthesis_input = tts.SynthesisInput(ssml=f"<speak>{message}</speak>")
 
         # Perform the text-to-speech request on the text input with the selected
         # voice parameters and audio file type

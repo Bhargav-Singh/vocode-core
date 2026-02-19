@@ -40,7 +40,7 @@ class AuthFlow:
 
         async def ask_member_id(state: IVRState):
             retry_count = self.get_retries(state, "member_id")
-            msg = "Auth Status. Please tell me the Member ID." if retry_count == 0 else "I didn't quite catch that. Please say the Member ID again, numbers only."
+            msg = "Auth Status. Can you please tell me your Member ID?" if retry_count == 0 else "Sorry, I didn't quite catch that. <break time='300ms'/> Could you please say your Member ID one more time?"
             
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
             
@@ -69,7 +69,9 @@ class AuthFlow:
             member_id = state.get("temp_member_id")
             if not member_id: return Command(goto="ask_member_id")
 
-            confirmation = interrupt({"message_to_play": f"Member ID is {member_id}. Correct?", "input_type": "single"})
+            member_id = " ".join(member_id)
+
+            confirmation = interrupt({"message_to_play": f"Member ID is <say-as interpret-as='digits'>{member_id}</say-as>. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -93,7 +95,7 @@ class AuthFlow:
 
         async def ask_dob(state: IVRState):
             retry_count = self.get_retries(state, "dob")
-            msg = "Please give me the Date of Birth." if retry_count == 0 else "Please say the Date of Birth again."
+            msg = "Please give me your Date of Birth." if retry_count == 0 else "Sorry, I didn't quite catch that. <break time='300ms'/> Could you please say your Date of Birth one more time?"
 
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
 
@@ -121,7 +123,7 @@ class AuthFlow:
             dob_date = state.get("temp_dob")
             if not dob_date: return Command(goto="ask_dob") 
 
-            confirmation = interrupt({"message_to_play": f"DOB is {dob_date}. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"DOB is <say-as interpret-as='date' format='mdy'>{dob_date}</say-as>. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -175,7 +177,7 @@ class AuthFlow:
 
         async def ask_npi(state: IVRState):
             retry_count = self.get_retries(state, "npi")
-            msg = "Please say the NPI Number." if retry_count == 0 else "Please say the NPI again."
+            msg = "Please give me your NPI Number." if retry_count == 0 else "Sorry, I didn't quite catch that. <break time='300ms'/> Could you please say your NPI number one more time?"
             
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
             
@@ -203,7 +205,9 @@ class AuthFlow:
             npi = state.get("temp_npi")
             if not npi: return Command(goto="ask_npi")
 
-            confirmation = interrupt({"message_to_play": f"NPI is {npi}. Correct?", "input_type": "single"})
+            npi = " ".join(npi)
+
+            confirmation = interrupt({"message_to_play": f"NPI number is <say-as interpret-as='digits'>{npi}</say-as>. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -227,8 +231,8 @@ class AuthFlow:
 
         async def fetch_auth_details(state: IVRState):
             # Simulate DB Logic
-            status = "Pending" 
-            msg = f"Your auth status is {status}. Now, what do you want are you want to 'repeat' or 'check another' or 'transfer the call to customer service' or 'main menu'."
+            status = "Approved" 
+            msg = f"Your auth status is {status}. <break time='1s'/> Now, what do you want are you want to 'repeat' or 'check another' or 'transfer the call to customer service' or 'main menu'."
             
             # Transition to input handler
             return Command(
