@@ -131,7 +131,7 @@ class IntentRouter:
             #     "input_type": "none", # 'none' signal to telephony to hangup/transfer
             # })
 
-            audio_url = "https://github.com/Bhargav-Singh/vocode-core/IVR_wiring/mixkit-office-telephone-ring-1350.wav"
+            audio_url = "https://raw.githubusercontent.com/Bhargav-Singh/vocode-core/IVR_wiring/mixkit-office-telephone-ring-1350.wav"
 
             message = f"""
             Please hold while I transfer you to a representative..... 
