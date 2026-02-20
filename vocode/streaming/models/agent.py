@@ -106,6 +106,7 @@ class AgentConfig(TypedModel, type=AgentType.BASE.value):  # type: ignore
     goodbye_phrases: Optional[List[str]] = None
     interrupt_sensitivity: InterruptSensitivity = "low"
     cut_off_response: Optional[CutOffResponse] = None
+    initial_message_interruptible: bool = True
 
 
 class LLMAgentConfig(AgentConfig, type=AgentType.LLM.value):  # type: ignore

@@ -60,19 +60,15 @@ class IntentRouter:
 
             retry_count = self.get_retries(state, "greet")
 
-            # 1. Determine Message based on retries
-            if retry_count == 0:
-                msg = "Hello, I am your AI assistant. I can help with Claims, Eligibility, or Authorization. How can I help you today?"
-            else:
-                msg = "Sorry, I didn't quite catch that. <break time='300ms'/> Please tell me if you need help with Claims, Eligibility, or Authorization."
+            msg = "Hello, I am your AI assistant. I can help with Claims, Eligibility, or Authorization. How can I help you today?"
 
-            # 2. Wait for user input
+            # 1. Wait for user input
             user_input = interrupt({
                 "message_to_play": msg,
                 "input_type": "varied"
             })
 
-            # 3. Check for Empty Input / Silence (Simple Validation)
+            # 2. Check for Empty Input / Silence (Simple Validation)
             # If input is empty, treat as failure and loop back
             if not user_input or not user_input.strip():
                 new_retries = self.increment_retries(state, "greet")
@@ -85,7 +81,7 @@ class IntentRouter:
                 # Loop back to self with incremented retry count
                 return Command(goto="greet_and_listen", update=new_retries)
 
-            # 4. Valid Input Received -> Move to Classification
+            # 3. Valid Input Received -> Move to Classification
             # Reset retries on success so next time we come here (e.g. from main menu) it's fresh
             return Command(
                 goto="classify_intent", 
@@ -135,11 +131,13 @@ class IntentRouter:
             #     "input_type": "none", # 'none' signal to telephony to hangup/transfer
             # })
 
-            message = """
+            audio_url = "https://github.com/Bhargav-Singh/vocode-core/IVR_wiring/mixkit-office-telephone-ring-1350.wav"
+
+            message = f"""
             Please hold while I transfer you to a representative..... 
             <break time='1s'/> 
 
-            <audio src="https://jazlynn-nonfictive-wade.ngrok-free.dev/mixkit-office-telephone-ring-1350.wav">
+            <audio src="{audio_url}">
                 Transferring now.
             </audio>
 

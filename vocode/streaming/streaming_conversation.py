@@ -233,7 +233,10 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                 return
             # ignore utterances during the initial message but still add them to the transcript
             initial_message_ongoing = not self.conversation.initial_message_tracker.is_set()
-            if initial_message_ongoing or self.should_ignore_utterance(transcription):
+            if (
+                initial_message_ongoing
+                and not self.conversation.agent.get_agent_config().initial_message_interruptible
+            ) or self.should_ignore_utterance(transcription):
                 logger.info(
                     f"Ignoring utterance: {transcription.message}. IMO: {initial_message_ongoing}"
                 )
@@ -793,7 +796,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
         agent_response_event = (
             self.interruptible_event_factory.create_interruptible_agent_response_event(
                 AgentResponseMessage(message=message, is_sole_text_chunk=True),
-                is_interruptible=False,
+                is_interruptible=(message==self.agent.get_agent_config().initial_message and self.agent.get_agent_config().initial_message_interruptible) if message_tracker == self.initial_message_tracker else False,
                 agent_response_tracker=message_tracker,
             )
         )
