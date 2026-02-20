@@ -28,7 +28,7 @@ KOALA_CHUNK_SIZE = 512  # 16 bit samples, size 256
 class VonagePhoneConversation(AbstractPhoneConversation[VonageOutputDevice]):
     telephony_provider = "vonage"
 
-    def __init__(
+    async def __ainit__(
         self,
         direction: PhoneCallDirection,
         from_phone: str,
@@ -50,7 +50,7 @@ class VonagePhoneConversation(AbstractPhoneConversation[VonageOutputDevice]):
         noise_suppression: bool = False,
     ):
         self.speed_coefficient = speed_coefficient
-        super().__init__(
+        await super().__ainit__(
             direction=direction,
             speed_coefficient=speed_coefficient,
             from_phone=from_phone,

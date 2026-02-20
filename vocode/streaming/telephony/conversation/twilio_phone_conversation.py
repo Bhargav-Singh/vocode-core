@@ -35,7 +35,7 @@ class TwilioPhoneConversationWebsocketAction(Enum):
 class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
     telephony_provider = "twilio"
 
-    def __init__(
+    async def __ainit__(
         self,
         direction: PhoneCallDirection,
         from_phone: str,
@@ -56,7 +56,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
         speed_coefficient: float = 1.0,
         noise_suppression: bool = False,  # is currently a no-op
     ):
-        super().__init__(
+        await super().__ainit__(
             direction=direction,
             from_phone=from_phone,
             to_phone=to_phone,

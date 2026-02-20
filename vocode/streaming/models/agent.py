@@ -15,6 +15,7 @@ LLM_AGENT_DEFAULT_MAX_TOKENS = 256
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"
 CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-1106"
 GOOGLE_DEFAULT_MODEL_NAME = "gemini-2.0-flash"
+IVRAgent_DEFAULT_MODEL_NAME = "gemini-2.0-flash"
 CHAT_GPT_AGENT_16K_MODEL_NAME = "gpt-3.5-turbo-0613-16k"
 ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
 CHAT_ANTHROPIC_DEFAULT_MODEL_NAME = "claude-3-haiku-20240307"
@@ -51,6 +52,7 @@ class AgentType(str, Enum):
     ECHO = "agent_echo"
     GPT4ALL = "agent_gpt4all"
     GOOGLE = "agent_google"
+    IVR = "agent_ivr"
     LLAMACPP = "agent_llamacpp"
     GROQ = "agent_groq"
     INFORMATION_RETRIEVAL = "agent_information_retrieval"
@@ -106,6 +108,7 @@ class AgentConfig(TypedModel, type=AgentType.BASE.value):  # type: ignore
     goodbye_phrases: Optional[List[str]] = None
     interrupt_sensitivity: InterruptSensitivity = "low"
     cut_off_response: Optional[CutOffResponse] = None
+    initial_message_interruptible: bool = True
 
 
 class LLMAgentConfig(AgentConfig, type=AgentType.LLM.value):  # type: ignore
@@ -135,6 +138,18 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):  # type: i
     first_response_filler_message: Optional[str] = None
     llm_fallback: Optional[LLMFallback] = None
 
+class IVRAgentConfig(AgentConfig, type=AgentType.IVR.value):
+    google_api_key: str
+    prompt_preamble: str
+    model_name: str = IVRAgent_DEFAULT_MODEL_NAME
+    temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
+    max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
+    max_retries: Optional[int] = 2
+    streaming: Optional[bool] = False
+    use_backchannels: bool = False
+    backchannel_probability: float = 0.7
+    first_response_filler_message: Optional[str] = None
+    llm_fallback: Optional[LLMFallback] = None
 
 class GoogleAgentConfig(AgentConfig, type=AgentType.GOOGLE.value):
     google_api_key: str

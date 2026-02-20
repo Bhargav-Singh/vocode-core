@@ -46,7 +46,7 @@ class CallsRouter(BaseRouter):
         self.router = APIRouter()
         self.router.websocket("/connect_call/{id}")(self.connect_call)
 
-    def _from_call_config(
+    async def _from_call_config(
         self,
         base_url: str,
         call_config: BaseCallConfig,
@@ -58,7 +58,7 @@ class CallsRouter(BaseRouter):
         events_manager: Optional[EventsManager] = None,
     ) -> AbstractPhoneConversation:
         if isinstance(call_config, TwilioCallConfig):
-            return TwilioPhoneConversation(
+            return await TwilioPhoneConversation(
                 to_phone=call_config.to_phone,
                 from_phone=call_config.from_phone,
                 base_url=base_url,
@@ -76,7 +76,7 @@ class CallsRouter(BaseRouter):
                 direction=call_config.direction,
             )
         elif isinstance(call_config, VonageCallConfig):
-            return VonagePhoneConversation(
+            return await VonagePhoneConversation(
                 to_phone=call_config.to_phone,
                 from_phone=call_config.from_phone,
                 base_url=base_url,
@@ -106,7 +106,7 @@ class CallsRouter(BaseRouter):
             if not call_config:
                 raise HTTPException(status_code=400, detail="No active phone call")
 
-            phone_conversation = self._from_call_config(
+            phone_conversation = await self._from_call_config(
                 base_url=self.base_url,
                 call_config=call_config,
                 config_manager=self.config_manager,

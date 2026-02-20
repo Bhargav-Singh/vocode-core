@@ -1,6 +1,7 @@
 # Standard library imports
 import os
 import sys
+import uvicorn
 
 from dotenv import load_dotenv
 
@@ -13,11 +14,15 @@ from pyngrok import ngrok
 from speller_agent import SpellerAgentFactory
 
 from vocode.logging import configure_pretty_logging
-from vocode.streaming.models.agent import ChatGPTAgentConfig
+from vocode.streaming.models.agent import ChatGPTAgentConfig, IVRAgentConfig
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.telephony import TwilioConfig
 from vocode.streaming.telephony.config_manager.redis_config_manager import RedisConfigManager
 from vocode.streaming.telephony.server.base import TelephonyServer, TwilioInboundCallConfig
+from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
+from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
+from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
+from vocode.streaming.models.transcriber import GoogleTranscriberConfig
 
 # if running from python, this will load the local .env
 # docker-compose will load the .env file by itself
@@ -25,7 +30,7 @@ load_dotenv()
 
 configure_pretty_logging()
 
-app = FastAPI(docs_url=None)
+app = FastAPI()
 
 config_manager = RedisConfigManager()
 
@@ -50,11 +55,31 @@ telephony_server = TelephonyServer(
     inbound_call_configs=[
         TwilioInboundCallConfig(
             url="/inbound_call",
-            agent_config=ChatGPTAgentConfig(
-                initial_message=BaseMessage(text="What up"),
-                prompt_preamble="Have a pleasant conversation about life",
-                generate_responses=True,
+            agent_config=IVRAgentConfig(
+                initial_message=BaseMessage(
+                    text=(
+                        "Thank you for calling. I can help you check claim status, "
+                        "authorization status, or member eligibility. How can I assist you today?"
+                    )
+                ),
+                prompt_preamble="You are a helpful IVR assistant.", # Simplistic preamble, real logic is in graph
+                allow_initial_message_to_be_cut_off=True,
+                interrupt_sensitivity="high",
+                num_check_human_present_times=4,
+                allowed_idle_time_seconds=10,
+                google_api_key=os.environ["GOOGLE_API_KEY"],
             ),
+            transcriber_config=GoogleTranscriberConfig.from_telephone_input_device(
+                        api_key=os.environ["GOOGLE_API_KEY"],
+                    ),
+            synthesizer_config=GoogleSynthesizerConfig.from_telephone_output_device(
+                        language_code="en-US",
+                        voice_name="en-US-Neural2-D",
+                        pitch=0,
+                        speaking_rate=1.00,
+                        api_key=os.environ["GOOGLE_API_KEY"],
+                    ),
+
             # uncomment this to use the speller agent instead
             # agent_config=SpellerAgentConfig(
             #     initial_message=BaseMessage(
@@ -72,3 +97,8 @@ telephony_server = TelephonyServer(
 )
 
 app.include_router(telephony_server.get_router())
+
+
+if __name__ == "__main__":
+    # This starts the server and stops the script from exiting
+    uvicorn.run(app, host="0.0.0.0", port=3000)

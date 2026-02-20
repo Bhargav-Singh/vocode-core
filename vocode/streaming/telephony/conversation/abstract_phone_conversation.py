@@ -19,6 +19,7 @@ from vocode.streaming.telephony.config_manager.base_config_manager import BaseCo
 from vocode.streaming.transcriber.abstract_factory import AbstractTranscriberFactory
 from vocode.streaming.utils import create_conversation_id
 from vocode.streaming.utils.events_manager import EventsManager
+from vocode.streaming.utils.asynchronous_class import AsyncMixin
 
 TelephonyOutputDeviceType = TypeVar(
     "TelephonyOutputDeviceType", bound=Union[TwilioOutputDevice, VonageOutputDevice]
@@ -29,10 +30,10 @@ LOW_INTERRUPT_SENSITIVITY_THRESHOLD = 0.9
 TelephonyProvider = Literal["twilio", "vonage"]
 
 
-class AbstractPhoneConversation(StreamingConversation[TelephonyOutputDeviceType]):
+class AbstractPhoneConversation(AsyncMixin, StreamingConversation[TelephonyOutputDeviceType]):
     telephony_provider: TelephonyProvider
 
-    def __init__(
+    async def __ainit__(
         self,
         direction: PhoneCallDirection,
         from_phone: str,
@@ -57,11 +58,12 @@ class AbstractPhoneConversation(StreamingConversation[TelephonyOutputDeviceType]
         self.from_phone = from_phone
         self.to_phone = to_phone
         self.base_url = base_url
-        super().__init__(
-            output_device,
-            transcriber_factory.create_transcriber(transcriber_config),
-            agent_factory.create_agent(agent_config),
-            synthesizer_factory.create_synthesizer(synthesizer_config),
+        StreamingConversation.__init__(
+            self,
+            output_device=output_device,
+            transcriber=transcriber_factory.create_transcriber(transcriber_config),
+            agent=await agent_factory.create_agent(agent_config),
+            synthesizer=synthesizer_factory.create_synthesizer(synthesizer_config),
             conversation_id=conversation_id,
             events_manager=events_manager,
             speed_coefficient=speed_coefficient,

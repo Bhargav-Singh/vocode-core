@@ -6,5 +6,5 @@ from vocode.streaming.models.agent import AgentConfig
 
 class AbstractAgentFactory(ABC):
     @abstractmethod
-    def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
+    async def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
         pass

@@ -3,7 +3,8 @@ from typing import Optional, Tuple
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
 from vocode.streaming.agent.base_agent import BaseAgent, RespondAgent
 from vocode.streaming.agent.chat_gpt_agent import ChatGPTAgent
-from vocode.streaming.models.agent import AgentConfig, AgentType, ChatGPTAgentConfig
+from vocode.streaming.models.agent import AgentConfig, AgentType, ChatGPTAgentConfig, IVRAgentConfig
+from vocode.ivr_agent.agent.ivr_flow_agent import IVRFlowAgent
 
 
 class SpellerAgentConfig(AgentConfig, type="agent_speller"):
@@ -51,7 +52,7 @@ class SpellerAgent(RespondAgent[SpellerAgentConfig]):
 class SpellerAgentFactory(AbstractAgentFactory):
     """Factory class for creating agents based on the provided agent configuration."""
 
-    def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
+    async def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
         """Creates an agent based on the provided agent configuration.
 
         Args:
@@ -69,5 +70,8 @@ class SpellerAgentFactory(AbstractAgentFactory):
         # If the agent configuration type is agent_speller, create a SpellerAgent.
         elif isinstance(agent_config, SpellerAgentConfig):
             return SpellerAgent(agent_config=agent_config)
+        # If the agent configuration type is IVR, create an IVRAgent.
+        elif isinstance(agent_config, IVRAgentConfig):
+            return await IVRFlowAgent(agent_config=agent_config, dry_run=True, use_llm_rephrase=False)
         # If the agent configuration type is not recognized, raise an exception.
         raise Exception("Invalid agent config")

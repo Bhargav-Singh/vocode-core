@@ -33,6 +33,15 @@
         - User: "What are your operating hours?"
         -> {{"is_exit": "0", "response": "Our support team is available Monday through Friday, from 9 AM to 6 PM EST."}}
 
+        - User: "Thank you for giving information?"
+        -> {{"is_exit": "0", "response": "You're very welcome! Can you have any other questions? if yes please ask if not please say bye."}}
+
+        - User: "Bye"
+        -> {{"is_exit": "1", "response": "Thank you for calling QuickCap. Have a great day!"}}
+
+        - User: "Thank you"
+        -> {{"is_exit": "0", "response": "You're very welcome! Can you have any other questions? if yes please ask if not please say bye."}}
+
         - User: "Thank you, that was all I needed."
         -> {{"is_exit": "1", "response": "You're very welcome! Thank you for calling QuickCap. Have a great day!"}}
 

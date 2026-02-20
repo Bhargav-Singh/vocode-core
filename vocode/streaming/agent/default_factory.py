@@ -14,7 +14,7 @@ from vocode.streaming.models.agent import (
 
 
 class DefaultAgentFactory(AbstractAgentFactory):
-    def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
+    async def create_agent(self, agent_config: AgentConfig) -> BaseAgent:
         if isinstance(agent_config, ChatGPTAgentConfig):
             return ChatGPTAgent(agent_config=agent_config)
         elif isinstance(agent_config, EchoAgentConfig):

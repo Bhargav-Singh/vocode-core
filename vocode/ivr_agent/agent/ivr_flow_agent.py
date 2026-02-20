@@ -10,9 +10,10 @@ from langgraph.types import Command
 
 from vocode.streaming.agent.base_agent import GeneratedResponse, RespondAgent
 from vocode.streaming.agent.chat_gpt_agent import instantiate_openai_client
-from vocode.streaming.models.agent import ChatGPTAgentConfig, GoogleAgentConfig
+from vocode.streaming.models.agent import ChatGPTAgentConfig, IVRAgentConfig
 from vocode.streaming.models.message import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
+from vocode.streaming.utils.asynchronous_class import AsyncMixin
 
 from vocode.ivr_agent.utilities.llm_initializer import Gemini
 
@@ -24,34 +25,10 @@ REPHRASE_SYSTEM_PROMPT = ChatPromptTemplate.from_messages([
 ])
 
 
-class AsyncMixin:
-    def __init__(self, *args, **kwargs):
-        """
-        Standard constructor used for arguments pass
-        Do not override. Use __ainit__ instead
-        """
-        self.__storedargs = args, kwargs
-        self.async_initialized = False
-
-    async def __ainit__(self, *args, **kwargs):
-        """Async constructor, you should implement this"""
-
-    async def __initobj(self):
-        """Crutch used for __await__ after spawning"""
-        assert not self.async_initialized
-        self.async_initialized = True
-        # pass the parameters to __ainit__ that passed to __init__
-        await self.__ainit__(*self.__storedargs[0], **self.__storedargs[1])
-        return self
-
-    def __await__(self):
-        return self.__initobj().__await__()
-
-
-class IVRFlowAgent(AsyncMixin, RespondAgent[GoogleAgentConfig]):
+class IVRFlowAgent(AsyncMixin, RespondAgent[IVRAgentConfig]):
     async def __ainit__(
         self,
-        agent_config: GoogleAgentConfig,
+        agent_config: IVRAgentConfig,
         dry_run: bool = True,
         use_llm_rephrase: bool = True,
         **kwargs,
