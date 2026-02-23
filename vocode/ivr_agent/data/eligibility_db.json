@@ -1,0 +1,294 @@
+{
+    "839210455": {
+        "dob": "04/12/1985",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Premium Choice PPO",
+                "effective_date": "2023/01/01",
+                "termination_date": null,
+                "office_visit_copay": 25.00
+            },
+            {
+                "coverage_type": "Dental",
+                "status": "Active",
+                "plan_name": "SmileGuard Basic",
+                "effective_date": "2023/01/01",
+                "termination_date": null,
+                "office_visit_copay": 10.00
+            }
+        ]
+    },
+    "492718302": {
+        "dob": "11/23/1990",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Standard HMO",
+                "effective_date": "2024/01/01",
+                "termination_date": null,
+                "office_visit_copay": 15.00
+            }
+        ]
+    },
+    "273849103": {
+        "dob": "02/08/1975",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Inactive",
+                "plan_name": "Standard HMO",
+                "effective_date": "2022/01/01",
+                "termination_date": "2023/12/31",
+                "office_visit_copay": 0.00
+            }
+        ]
+    },
+    "581930274": {
+        "dob": "07/30/1988",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "High Deductible Health Plan",
+                "effective_date": "2023/06/01",
+                "termination_date": null,
+                "office_visit_copay": 0.00
+            }
+        ]
+    },
+    "918273645": {
+        "dob": "09/14/2001",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Student Health Basic",
+                "effective_date": "2023/08/15",
+                "termination_date": null,
+                "office_visit_copay": 20.00
+            },
+            {
+                "coverage_type": "Vision",
+                "status": "Inactive",
+                "plan_name": "ClearSight Vision",
+                "effective_date": "2022/08/15",
+                "termination_date": "2023/08/14",
+                "office_visit_copay": 15.00
+            }
+        ]
+    },
+    "304958172": {
+        "dob": "03/22/1965",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Medicare Advantage Plus",
+                "effective_date": "2020/01/01",
+                "termination_date": null,
+                "office_visit_copay": 10.00
+            }
+        ]
+    },
+    "675849301": {
+        "dob": "12/05/1995",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Essential EPO",
+                "effective_date": "2024/02/01",
+                "termination_date": null,
+                "office_visit_copay": 30.00
+            }
+        ]
+    },
+    "293847561": {
+        "dob": "08/17/1982",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Inactive",
+                "plan_name": "Premium Choice PPO",
+                "effective_date": "2021/05/01",
+                "termination_date": "2023/04/30",
+                "office_visit_copay": 25.00
+            }
+        ]
+    },
+    "564738291": {
+        "dob": "01/29/1970",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Standard HMO",
+                "effective_date": "2022/11/01",
+                "termination_date": null,
+                "office_visit_copay": 20.00
+            }
+        ]
+    },
+    "847561920": {
+        "dob": "06/11/1992",
+        "eligibility_data": [
+            {
+                "coverage_type": "Dental",
+                "status": "Active",
+                "plan_name": "SmileGuard Premium",
+                "effective_date": "2023/03/01",
+                "termination_date": null,
+                "office_visit_copay": 0.00
+            },
+            {
+                "coverage_type": "Vision",
+                "status": "Active",
+                "plan_name": "ClearSight Vision",
+                "effective_date": "2023/03/01",
+                "termination_date": null,
+                "office_visit_copay": 15.00
+            }
+        ]
+    },
+    "102570911": {
+        "dob": "10/09/1986",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "State Employee Health Plan",
+                "effective_date": "2019/01/01",
+                "termination_date": null,
+                "office_visit_copay": 15.00
+            }
+        ]
+    },
+    "748593021": {
+        "dob": "05/20/1955",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Inactive",
+                "plan_name": "Medicare Supplement",
+                "effective_date": "2021/01/01",
+                "termination_date": "2023/12/31",
+                "office_visit_copay": 0.00
+            }
+        ]
+    },
+    "394857102": {
+        "dob": "03/03/2005",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Family Core PPO",
+                "effective_date": "2023/01/01",
+                "termination_date": null,
+                "office_visit_copay": 20.00
+            }
+        ]
+    },
+    "605948372": {
+        "dob": "09/27/1998",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Young Adult EPO",
+                "effective_date": "2024/01/01",
+                "termination_date": null,
+                "office_visit_copay": 35.00
+            }
+        ]
+    },
+    "219384756": {
+        "dob": "12/12/1979",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "High Deductible Health Plan",
+                "effective_date": "2022/01/01",
+                "termination_date": null,
+                "office_visit_copay": 0.00
+            }
+        ]
+    },
+    "938475610": {
+        "dob": "04/18/1968",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Premium Choice PPO",
+                "effective_date": "2020/07/01",
+                "termination_date": null,
+                "office_visit_copay": 25.00
+            }
+        ]
+    },
+    "485710293": {
+        "dob": "01/08/1991",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Inactive",
+                "plan_name": "Essential EPO",
+                "effective_date": "2023/01/01",
+                "termination_date": "2023/06/30",
+                "office_visit_copay": 30.00
+            }
+        ]
+    },
+    "756102938": {
+        "dob": "06/25/1984",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Standard HMO",
+                "effective_date": "2024/03/01",
+                "termination_date": null,
+                "office_visit_copay": 15.00
+            },
+            {
+                "coverage_type": "Dental",
+                "status": "Active",
+                "plan_name": "SmileGuard Basic",
+                "effective_date": "2024/03/01",
+                "termination_date": null,
+                "office_visit_copay": 10.00
+            }
+        ]
+    },
+    "192837465": {
+        "dob": "11/14/2000",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Student Health Basic",
+                "effective_date": "2023/09/01",
+                "termination_date": null,
+                "office_visit_copay": 20.00
+            }
+        ]
+    },
+    "837465192": {
+        "dob": "08/02/1973",
+        "eligibility_data": [
+            {
+                "coverage_type": "Medical",
+                "status": "Active",
+                "plan_name": "Premium Choice PPO",
+                "effective_date": "2021/10/01",
+                "termination_date": null,
+                "office_visit_copay": 25.00
+            }
+        ]
+    }
+}

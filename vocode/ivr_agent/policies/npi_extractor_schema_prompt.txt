@@ -40,6 +40,10 @@
         - "my NPI number is 1 567 89" -> {{"extracted_npi": "156789", "command": "None"}}
         - "one two three four five six seven eight nine zero" -> {{"extracted_npi": "1234567890", "command": "None"}}
         - "npi is 9 8 7 6 5" -> {{"extracted_npi": "98765", "command": "None"}}
+        - "1 7 * 0 3" -> {{"extracted_npi": "100000003", "command": "None"}}
+        - "1 7 * 03" -> {{"extracted_npi": "100000003", "command": "None"}}
+        - "1 followed by 7 03" -> {{"extracted_npi": "100000003", "command": "None"}}
+        - "1 followed by 7 0 3" -> {{"extracted_npi": "100000003", "command": "None"}}
         - "my number is 11-22-33-44-55" -> {{"extracted_npi": "1122334455", "command": "None"}}
         - "hello how are you" -> {{"extracted_npi": "", "command": "None"}}
         - "I want to speak to an agent" -> {{"extracted_npi": "", "command": "TRANSFER"}}

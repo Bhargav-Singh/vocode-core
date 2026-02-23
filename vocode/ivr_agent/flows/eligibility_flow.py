@@ -1,6 +1,6 @@
 # Eligibility Flow
-
-from typing import Literal
+import json, os
+from typing import Literal, Optional, List, Dict
 from langgraph.graph import StateGraph, END, START
 from langgraph.types import interrupt, Command
 from vocode.ivr_agent.state.store import IVRState
@@ -20,6 +20,9 @@ class EligibilityFlow:
     def __init__(self, LLM):
         self.MAX_RETRIES = 3
         self.LLM = LLM
+        db_path = os.path.join(os.getcwd(), "vocode/ivr_agent/data/eligibility_db.json")
+        with open(db_path, "r") as f:
+            self.db = json.load(f)
 
     # --- Helper Functions ---
     def get_retries(self, state: IVRState, key: str) -> int: 
@@ -29,6 +32,24 @@ class EligibilityFlow:
         curr = state.get("retries", {}).copy()
         curr[key] = curr.get(key, 0) + 1
         return {"retries": curr}
+
+    def _get_validated_eligibility(self, member_id: str, dob: str) -> Optional[List[Dict]]:
+        """
+        Validates the user's inputs against the Eligibility JSON DB.
+        Returns the eligibility list if successful, or None if validation fails.
+        """
+        patient_data = self.db.get(member_id)
+        
+        # 1. Check if Member ID exists
+        if not patient_data:
+            return None
+            
+        # 2. Check if DOB matches exactly
+        if patient_data.get("dob") != dob:
+            return None
+
+        # If it passes BOTH checks, return the eligibility data
+        return patient_data.get("eligibility_data", [])
 
     # --- Building Graph ----
 
@@ -77,9 +98,9 @@ class EligibilityFlow:
                 else:
                     spoken_chars.append(ch)
 
-            member_id = " <break time='50ms'/> ".join(spoken_chars)
+            rephrase_member_id = " <break time='50ms'/> ".join(spoken_chars)
             
-            confirmation = interrupt({"message_to_play": f"Member ID is {member_id}. Correct?", "input_type": "single"})
+            confirmation = interrupt({"message_to_play": f"Member ID is {rephrase_member_id}. Correct?", "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -154,9 +175,45 @@ class EligibilityFlow:
             return Command(goto="ask_dob", update=new_retries)
 
         async def fetch_details(state: IVRState):
-            # Simulate DB lookup
-            msg = "Member is Active. <break time='1s'/> Now, what do you want are you want to 'repeat' or 'check another' or 'transfer the call to customer service' or 'main menu'."
+            member_id = state.get("member_id")
+            dob = state.get("dob")
+
+            plans = self._get_validated_eligibility(member_id, dob)
+
+            if plans is None:
+                return Command(goto="set_status_transfer")
             
+            if not plans:
+                msg = "I'm sorry, I could not find any eligibility for this account. <break time='1s'/> Now, what would you like to do? You can say 'repeat', 'check another', 'transfer', or 'main menu'."
+                return Command(goto="handle_final", update={"message_to_play": msg})
+
+            msg_parts = [f"I found {len(plans)} coverage record{'s' if len(plans) > 1 else ''} on file."]
+
+            for idx, plan in enumerate(plans):
+                # Format the Effective Date (YYYY/MM/DD requires 'ymd')
+                spoken_effective = f"<say-as interpret-as='date' format='ymd'>{plan['effective_date']}</say-as>"
+
+                plan_text = (
+                    f"Coverage type is {plan['coverage_type']}. "
+                    f"The plan name is {plan['plan_name']}. "
+                    f"The current status is {plan['status']}, with an effective date of {spoken_effective}. "
+                )
+                
+                # Check if the plan is inactive and has a termination date
+                if plan['status'].lower() == "inactive" and plan.get('termination_date'):
+                    spoken_term = f"<say-as interpret-as='date' format='ymd'>{plan['termination_date']}</say-as>"
+                    plan_text += f"The policy was terminated on {spoken_term}."
+                    
+                # Check if the plan is active and read the copay
+                elif plan['status'].lower() == "active" and plan.get('office_visit_copay') is not None:
+                    plan_text += f"Your office visit copay is {plan['office_visit_copay']} dollars."
+
+                msg_parts.append(plan_text.strip())
+
+            final_speech = " <break time='1500ms'/> ".join(msg_parts)
+
+            msg = f"{final_speech}. <break time='1s'/> Now, what would you like to do? You can say 'repeat', 'check another', 'transfer', or 'main menu'."
+
             # Directly transition to input handler
             return Command(
                 goto="handle_final",
