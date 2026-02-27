@@ -3,17 +3,18 @@
         "dob": "04/12/1985",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8831",
-                "date_of_service": "2023/10/05",
+                "date_of_service": "10/05/2023",
                 "status": "Approved",
                 "billed_amount": 150.00,
                 "paid_amount": 120.00
             },
             {
                 "claim_id": "CLM-8832",
-                "date_of_service": "2023/11/20",
+                "date_of_service": "11/20/2023",
                 "status": "Pending",
                 "billed_amount": 75.00,
                 "paid_amount": 0.00
@@ -24,17 +25,18 @@
         "dob": "11/23/1990",
         "type": "provider",
         "npi_number": "273138403",
+        "tax_id": "273138403",
         "claims_data": [
             {
                 "claim_id": "CLM-9921",
-                "date_of_service": "2023/11/15",
+                "date_of_service": "11/15/2023",
                 "status": "Pending",
                 "billed_amount": 250.00,
                 "paid_amount": 0.00
             },
             {
                 "claim_id": "CLM-9922",
-                "date_of_service": "2023/11/18",
+                "date_of_service": "11/18/2023",
                 "status": "Approved",
                 "billed_amount": 100.00,
                 "paid_amount": 100.00
@@ -45,10 +47,11 @@
         "dob": "02/08/1975",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8833",
-                "date_of_service": "2024/01/10",
+                "date_of_service": "01/10/2024",
                 "status": "Denied",
                 "billed_amount": 1000.00,
                 "paid_amount": 0.00,
@@ -60,10 +63,11 @@
         "dob": "07/30/1988",
         "type": "provider",
         "npi_number": "342238482",
+        "tax_id": "342238482",
         "claims_data": [
             {
                 "claim_id": "CLM-8834",
-                "date_of_service": "2023/12/01",
+                "date_of_service": "12/01/2023",
                 "status": "Approved",
                 "billed_amount": 75.50,
                 "paid_amount": 75.50
@@ -74,17 +78,18 @@
         "dob": "09/14/2001",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8835",
-                "date_of_service": "2024/02/18",
+                "date_of_service": "02/18/2024",
                 "status": "Pending",
                 "billed_amount": 500.00,
                 "paid_amount": 0.00
             },
             {
                 "claim_id": "CLM-8836",
-                "date_of_service": "2024/03/01",
+                "date_of_service": "03/01/2024",
                 "status": "Approved",
                 "billed_amount": 120.00,
                 "paid_amount": 90.00
@@ -95,17 +100,18 @@
         "dob": "03/22/1965",
         "type": "provider",
         "npi_number": "987458225",
+        "tax_id": "987458225",
         "claims_data": [
             {
                 "claim_id": "CLM-8837",
-                "date_of_service": "2023/09/11",
+                "date_of_service": "09/11/2023",
                 "status": "Approved",
                 "billed_amount": 320.00,
                 "paid_amount": 280.00
             },
             {
                 "claim_id": "CLM-8838",
-                "date_of_service": "2023/10/01",
+                "date_of_service": "10/01/2023",
                 "status": "Approved",
                 "billed_amount": 110.00,
                 "paid_amount": 110.00
@@ -116,10 +122,11 @@
         "dob": "12/05/1995",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8839",
-                "date_of_service": "2024/01/22",
+                "date_of_service": "01/22/2024",
                 "status": "Approved",
                 "billed_amount": 135.00,
                 "paid_amount": 100.00
@@ -130,10 +137,11 @@
         "dob": "08/17/1982",
         "type": "provider",
         "npi_number": "894584517",
+        "tax_id": "894584517",
         "claims_data": [
             {
                 "claim_id": "CLM-8840",
-                "date_of_service": "2023/12/20",
+                "date_of_service": "12/20/2023",
                 "status": "Denied",
                 "billed_amount": 450.00,
                 "paid_amount": 0.00,
@@ -145,17 +153,18 @@
         "dob": "01/29/1970",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8841",
-                "date_of_service": "2024/02/05",
+                "date_of_service": "02/05/2024",
                 "status": "Approved",
                 "billed_amount": 80.00,
                 "paid_amount": 80.00
             },
             {
                 "claim_id": "CLM-8842",
-                "date_of_service": "2024/02/15",
+                "date_of_service": "02/15/2024",
                 "status": "Denied",
                 "billed_amount": 300.00,
                 "paid_amount": 0.00,
@@ -167,17 +176,18 @@
         "dob": "06/11/1992",
         "type": "provider",
         "npi_number": "234875937",
+        "tax_id": "234875937",
         "claims_data": [
             {
                 "claim_id": "CLM-8843",
-                "date_of_service": "2024/01/30",
+                "date_of_service": "01/30/2024",
                 "status": "Pending",
                 "billed_amount": 210.00,
                 "paid_amount": 0.00
             },
             {
                 "claim_id": "CLM-8844",
-                "date_of_service": "2024/02/02",
+                "date_of_service": "02/02/2024",
                 "status": "Pending",
                 "billed_amount": 150.00,
                 "paid_amount": 0.00
@@ -188,10 +198,11 @@
         "dob": "10/09/1986",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8845",
-                "date_of_service": "2023/08/14",
+                "date_of_service": "08/14/2023",
                 "status": "Approved",
                 "billed_amount": 600.00,
                 "paid_amount": 550.00
@@ -202,10 +213,11 @@
         "dob": "05/20/1955",
         "type": "provider",
         "npi_number": "120395847",
+        "tax_id": "120395847",
         "claims_data": [
             {
                 "claim_id": "CLM-8846",
-                "date_of_service": "2023/11/02",
+                "date_of_service": "11/02/2023",
                 "status": "Denied",
                 "billed_amount": 150.00,
                 "paid_amount": 0.00,
@@ -217,10 +229,11 @@
         "dob": "03/03/2005",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8847",
-                "date_of_service": "2024/02/10",
+                "date_of_service": "02/10/2024",
                 "status": "Approved",
                 "billed_amount": 95.00,
                 "paid_amount": 75.00
@@ -231,10 +244,11 @@
         "dob": "09/27/1998",
         "type": "provider",
         "npi_number": "273849506",
+        "tax_id": "273849506",
         "claims_data": [
             {
                 "claim_id": "CLM-8848",
-                "date_of_service": "2024/01/15",
+                "date_of_service": "01/15/2024",
                 "status": "Pending",
                 "billed_amount": 1200.00,
                 "paid_amount": 0.00
@@ -245,10 +259,11 @@
         "dob": "12/12/1979",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8849",
-                "date_of_service": "2023/10/28",
+                "date_of_service": "10/28/2023",
                 "status": "Approved",
                 "billed_amount": 40.00,
                 "paid_amount": 40.00
@@ -259,10 +274,11 @@
         "dob": "04/18/1968",
         "type": "provider",
         "npi_number": "932384560",
+        "tax_id": "932384560",
         "claims_data": [
             {
                 "claim_id": "CLM-8850",
-                "date_of_service": "2023/12/10",
+                "date_of_service": "12/10/2023",
                 "status": "Approved",
                 "billed_amount": 310.00,
                 "paid_amount": 310.00
@@ -273,10 +289,11 @@
         "dob": "01/08/1991",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8851",
-                "date_of_service": "2024/02/01",
+                "date_of_service": "02/01/2024",
                 "status": "Denied",
                 "billed_amount": 85.00,
                 "paid_amount": 0.00,
@@ -288,10 +305,11 @@
         "dob": "06/25/1984",
         "type": "provider",
         "npi_number": "124435321",
+        "tax_id": "124435321",
         "claims_data": [
             {
                 "claim_id": "CLM-8852",
-                "date_of_service": "2024/01/05",
+                "date_of_service": "01/05/2024",
                 "status": "Pending",
                 "billed_amount": 540.00,
                 "paid_amount": 0.00
@@ -302,17 +320,18 @@
         "dob": "11/14/2000",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "claims_data": [
             {
                 "claim_id": "CLM-8853",
-                "date_of_service": "2023/09/30",
+                "date_of_service": "09/30/2023",
                 "status": "Approved",
                 "billed_amount": 220.00,
                 "paid_amount": 180.00
             },
             {
                 "claim_id": "CLM-8854",
-                "date_of_service": "2023/11/05",
+                "date_of_service": "11/05/2023",
                 "status": "Approved",
                 "billed_amount": 150.00,
                 "paid_amount": 120.00
@@ -323,17 +342,18 @@
         "dob": "08/02/1973",
         "type": "provider",
         "npi_number": "638362938",
+        "tax_id": "638362938",
         "claims_data": [
             {
                 "claim_id": "CLM-8855",
-                "date_of_service": "2023/11/20",
+                "date_of_service": "11/20/2023",
                 "status": "Approved",
                 "billed_amount": 105.00,
                 "paid_amount": 105.00
             },
             {
                 "claim_id": "CLM-8856",
-                "date_of_service": "2023/12/05",
+                "date_of_service": "12/05/2023",
                 "status": "Denied",
                 "billed_amount": 50.00,
                 "paid_amount": 0.00,

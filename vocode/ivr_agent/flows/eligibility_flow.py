@@ -6,7 +6,7 @@ from langgraph.types import interrupt, Command
 from vocode.ivr_agent.state.store import IVRState
 from vocode.ivr_agent.state.models import (
     BinaryConfirmationOutputSchema, 
-    DOBExtractorOutputSchema, 
+    DATEExtractorOutputSchema, 
     MultiClassValidatorOutputSchema,
     MemberIDExtractorOutputSchema
 )
@@ -71,6 +71,7 @@ class EligibilityFlow:
             # Global Commands
             if parsed.command == "TRANSFER": return Command(goto="set_status_transfer")
             if parsed.command == "MAIN_MENU": return Command(goto="set_status_main_menu")
+            if parsed.command == "EXIT": return Command(goto="set_status_exit")
 
             # Retry Logic
             if not parsed.extracted_member_id:
@@ -82,7 +83,7 @@ class EligibilityFlow:
             # Success -> Goto Confirm Member ID
             return Command(
                 goto="confirm_member_id", 
-                update={"last_user_input": user_input, "temp_member_id": parsed.extracted_member_id}
+                update={"last_user_input": user_input, "temp_member_id": parsed.extracted_member_id, "retries": {}}
             )
 
         async def confirm_member_id(state: IVRState):
@@ -100,7 +101,12 @@ class EligibilityFlow:
 
             rephrase_member_id = " <break time='50ms'/> ".join(spoken_chars)
             
-            confirmation = interrupt({"message_to_play": f"Member ID is {rephrase_member_id}. Correct?", "input_type": "single"})
+            # Retry Logic
+            retry_count = self.get_retries(state, "confirm_member_id")
+            msg = f"Member ID is {rephrase_member_id}. Correct?" if retry_count == 0 else f"Sorry, I didn't quite catch that. <break time='300ms'/> Could you please confirm your Member ID is {rephrase_member_id} correct?"
+
+            # Get User Input
+            confirmation = interrupt({"message_to_play": msg, "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -108,6 +114,7 @@ class EligibilityFlow:
 
             if parsed.command == "TRANSFER": return Command(goto="set_status_transfer")
             if parsed.command == "MAIN_MENU": return Command(goto="set_status_main_menu")
+            if parsed.command == "EXIT": return Command(goto="set_status_exit")
             
             if parsed.confirmation == "1": 
                 # Success -> Goto Ask DOB
@@ -117,10 +124,10 @@ class EligibilityFlow:
                 )
             
             # Retry Logic (Go back to Ask ID)
-            new_retries = self.increment_retries(state, "member_id")
-            if new_retries["retries"]["member_id"] > self.MAX_RETRIES: 
+            new_retries = self.increment_retries(state, "confirm_member_id")
+            if new_retries["retries"]["confirm_member_id"] > self.MAX_RETRIES: 
                 return Command(goto="set_status_transfer")
-            return Command(goto="ask_member_id", update=new_retries)
+            return Command(goto="confirm_member_id", update=new_retries)
 
         async def ask_dob(state: IVRState):
             retry_count = self.get_retries(state, "dob")
@@ -128,15 +135,16 @@ class EligibilityFlow:
             
             user_input = interrupt({"message_to_play": msg, "input_type": "varied"})
             
-            chain = PROMPT['DOB_EXTRACTOR_SCHEMA_PROMPT'] | self.LLM.with_structured_output(DOBExtractorOutputSchema, include_raw=True)
+            chain = PROMPT['DATE_EXTRACTOR_SCHEMA_PROMPT'] | self.LLM.with_structured_output(DATEExtractorOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": user_input})
             parsed = before_parsed['parsed']
             
             if parsed.command == "TRANSFER": return Command(goto="set_status_transfer")
             if parsed.command == "MAIN_MENU": return Command(goto="set_status_main_menu")
+            if parsed.command == "EXIT": return Command(goto="set_status_exit")
             
             # Retry Logic
-            if not parsed.extracted_dob:
+            if not parsed.extracted_date:
                 new_retries = self.increment_retries(state, "dob")
                 if new_retries["retries"]["dob"] > self.MAX_RETRIES: 
                     return Command(goto="set_status_transfer")
@@ -145,14 +153,17 @@ class EligibilityFlow:
             # Success -> Goto Confirm DOB
             return Command(
                 goto="confirm_dob", 
-                update={"last_user_input": parsed.extracted_dob, "temp_dob": parsed.extracted_dob}
+                update={"last_user_input": parsed.extracted_date, "temp_dob": parsed.extracted_date, "retries": {}}
             )
 
         async def confirm_dob(state: IVRState):
             dob = state.get("temp_dob")
             if not dob: return Command(goto="ask_dob")
             
-            confirmation = interrupt({"message_to_play": f"Your Date of Birth is <break time='300ms'/> <say-as interpret-as='date' format='mdy'>{dob}</say-as>. Correct?", "input_type": "single"})
+            retry_count = self.get_retries(state, "confirm_dob")
+            msg = f"Your Date of Birth is <break time='300ms'/> <say-as interpret-as='date' format='mdy'>{dob}</say-as>. Correct?" if retry_count == 0 else f"Sorry, I didn't quite catch that. <break time='300ms'/> Could you please confirm your Date of Birth is <break time='300ms'/> <say-as interpret-as='date' format='mdy'>{dob}</say-as> correct?"
+
+            confirmation = interrupt({"message_to_play": msg, "input_type": "single"})
             
             chain = PROMPT['CONFIRMATION_VALIDATOR_SYSTEM_PROMPT'] | self.LLM.with_structured_output(BinaryConfirmationOutputSchema, include_raw=True)
             before_parsed = await chain.ainvoke({"user_input": confirmation})
@@ -160,6 +171,7 @@ class EligibilityFlow:
             
             if parsed.command == "TRANSFER": return Command(goto="set_status_transfer")
             if parsed.command == "MAIN_MENU": return Command(goto="set_status_main_menu")
+            if parsed.command == "EXIT": return Command(goto="set_status_exit")
 
             if parsed.confirmation == "1": 
                 # Success -> Goto Fetch Details
@@ -169,10 +181,10 @@ class EligibilityFlow:
                 )
 
             # Retry Logic (Go back to Ask DOB)
-            new_retries = self.increment_retries(state, "dob")
-            if new_retries["retries"]["dob"] > self.MAX_RETRIES: 
+            new_retries = self.increment_retries(state, "confirm_dob")
+            if new_retries["retries"]["confirm_dob"] > self.MAX_RETRIES: 
                 return Command(goto="set_status_transfer")
-            return Command(goto="ask_dob", update=new_retries)
+            return Command(goto="confirm_dob", update=new_retries)
 
         async def fetch_details(state: IVRState):
             member_id = state.get("member_id")
@@ -190,8 +202,8 @@ class EligibilityFlow:
             msg_parts = [f"I found {len(plans)} coverage record{'s' if len(plans) > 1 else ''} on file."]
 
             for idx, plan in enumerate(plans):
-                # Format the Effective Date (YYYY/MM/DD requires 'ymd')
-                spoken_effective = f"<say-as interpret-as='date' format='ymd'>{plan['effective_date']}</say-as>"
+                # Format the Effective Date (YYYY/MM/DD requires 'mdy')
+                spoken_effective = f"<say-as interpret-as='date' format='mdy'>{plan['effective_date']}</say-as>"
 
                 plan_text = (
                     f"Coverage type is {plan['coverage_type']}. "
@@ -201,7 +213,7 @@ class EligibilityFlow:
                 
                 # Check if the plan is inactive and has a termination date
                 if plan['status'].lower() == "inactive" and plan.get('termination_date'):
-                    spoken_term = f"<say-as interpret-as='date' format='ymd'>{plan['termination_date']}</say-as>"
+                    spoken_term = f"<say-as interpret-as='date' format='mdy'>{plan['termination_date']}</say-as>"
                     plan_text += f"The policy was terminated on {spoken_term}."
                     
                 # Check if the plan is active and read the copay
@@ -229,6 +241,7 @@ class EligibilityFlow:
             
             if parsed.command == "TRANSFER": return Command(goto="set_status_transfer")
             if parsed.command == "MAIN_MENU": return Command(goto="set_status_main_menu")
+            if parsed.command == "EXIT": return Command(goto="set_status_exit")
             
             sel = parsed.selection
             
@@ -253,7 +266,7 @@ class EligibilityFlow:
 
         async def set_status_transfer(state): return get_reset_state_update("transfer")
         async def set_status_main_menu(state): return get_reset_state_update("main_menu")
-
+        async def set_status_exit(state): return get_reset_state_update("exit")
     
         # Add Nodes
         wf.add_node("ask_member_id", ask_member_id)
@@ -265,6 +278,7 @@ class EligibilityFlow:
         
         wf.add_node("set_status_transfer", set_status_transfer)
         wf.add_node("set_status_main_menu", set_status_main_menu)
+        wf.add_node("set_status_exit", set_status_exit)
         
         # Entry Point
         wf.set_entry_point("ask_member_id")
@@ -273,5 +287,6 @@ class EligibilityFlow:
         # (Complex logic removed because Command handles routing)
         wf.add_edge("set_status_transfer", END)
         wf.add_edge("set_status_main_menu", END)
+        wf.add_edge("set_status_exit", END)
         
         return wf.compile()      ## If anything issue occurred the graph state not changed then give the 'checkpointer=True' in the compile method like this graph.compile(checkpointer=True).

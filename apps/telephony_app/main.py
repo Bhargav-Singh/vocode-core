@@ -22,7 +22,8 @@ from vocode.streaming.telephony.server.base import TelephonyServer, TwilioInboun
 from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
 from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
-from vocode.streaming.models.transcriber import GoogleTranscriberConfig
+from vocode.streaming.models.transcriber import GoogleTranscriberConfig, DeepgramTranscriberConfig
+from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig
 
 # if running from python, this will load the local .env
 # docker-compose will load the .env file by itself
@@ -69,9 +70,19 @@ telephony_server = TelephonyServer(
                 allowed_idle_time_seconds=10,
                 google_api_key=os.environ["GOOGLE_API_KEY"],
             ),
-            transcriber_config=GoogleTranscriberConfig.from_telephone_input_device(
-                        api_key=os.environ["GOOGLE_API_KEY"],
-                    ),
+            # transcriber_config=GoogleTranscriberConfig.from_telephone_input_device(
+            #             model="telephony",
+            #             api_key=os.environ["GOOGLE_API_KEY"],
+            #         ),
+            transcriber_config=DeepgramTranscriberConfig.from_telephone_input_device(
+                model="nova-2",
+                language="en",
+                smart_format=True,
+                numerals=True,
+                endpointing_config=DeepgramEndpointingConfig(),
+                keywords=["claim", "status", "auth", "status", "eligibility", "eligible", "feb", "august", "double"],
+                api_key=os.environ["DEEPGRAM_API_KEY"],
+            ),
             synthesizer_config=GoogleSynthesizerConfig.from_telephone_output_device(
                         language_code="en-US",
                         voice_name="en-US-Neural2-D",

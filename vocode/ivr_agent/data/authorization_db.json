@@ -3,17 +3,18 @@
         "dob": "04/12/1985",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8831",
-                "date_of_service": "2023/10/05",
+                "date_of_service": "10/05/2023",
                 "status": "Approved",
                 "service_requested": "MRI of Brain",
-                "expiration_date": "2024/04/05"
+                "expiration_date": "04/05/2024"
             },
             {
                 "auth_id": "AUTH-8832",
-                "date_of_service": "2023/11/20",
+                "date_of_service": "11/20/2023",
                 "status": "Pending",
                 "service_requested": "Physical Therapy Evaluation",
                 "expiration_date": null
@@ -24,20 +25,21 @@
         "dob": "11/23/1990",
         "type": "provider",
         "npi_number": "273138403",
+        "tax_id": "273138403",
         "auth_data": [
             {
                 "auth_id": "AUTH-9921",
-                "date_of_service": "2023/11/15",
+                "date_of_service": "11/15/2023",
                 "status": "Pending",
                 "service_requested": "Inpatient Surgery",
                 "expiration_date": null
             },
             {
                 "auth_id": "AUTH-9922",
-                "date_of_service": "2023/11/18",
+                "date_of_service": "11/18/2023",
                 "status": "Approved",
                 "service_requested": "Outpatient Knee Arthroscopy",
-                "expiration_date": "2024/05/18"
+                "expiration_date": "05/18/2024"
             }
         ]
     },
@@ -45,10 +47,11 @@
         "dob": "02/08/1975",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8833",
-                "date_of_service": "2024/01/10",
+                "date_of_service": "01/10/2024",
                 "status": "Denied",
                 "service_requested": "Chiropractic Adjustment",
                 "denial_reason": "Service not covered under current plan"
@@ -59,13 +62,14 @@
         "dob": "07/30/1988",
         "type": "provider",
         "npi_number": "342238482",
+        "tax_id": "342238482",
         "auth_data": [
             {
                 "auth_id": "AUTH-8834",
-                "date_of_service": "2023/12/01",
+                "date_of_service": "12/01/2023",
                 "status": "Approved",
                 "service_requested": "CT Scan of Abdomen",
-                "expiration_date": "2024/06/01"
+                "expiration_date": "06/01/2024"
             }
         ]
     },
@@ -73,20 +77,21 @@
         "dob": "09/14/2001",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8835",
-                "date_of_service": "2024/02/18",
+                "date_of_service": "02/18/2024",
                 "status": "Pending",
                 "service_requested": "Mental Health Counseling",
                 "expiration_date": null
             },
             {
                 "auth_id": "AUTH-8836",
-                "date_of_service": "2024/03/01",
+                "date_of_service": "03/01/2024",
                 "status": "Approved",
                 "service_requested": "Dermatology Consultation",
-                "expiration_date": "2024/09/01"
+                "expiration_date": "09/01/2024"
             }
         ]
     },
@@ -94,20 +99,21 @@
         "dob": "03/22/1965",
         "type": "provider",
         "npi_number": "987458225",
+        "tax_id": "987458225",
         "auth_data": [
             {
                 "auth_id": "AUTH-8837",
-                "date_of_service": "2023/09/11",
+                "date_of_service": "09/11/2023",
                 "status": "Approved",
                 "service_requested": "Sleep Study",
-                "expiration_date": "2024/03/11"
+                "expiration_date": "03/11/2024"
             },
             {
                 "auth_id": "AUTH-8838",
-                "date_of_service": "2023/10/01",
+                "date_of_service": "10/01/2023",
                 "status": "Approved",
                 "service_requested": "Cardiac Stress Test",
-                "expiration_date": "2024/04/01"
+                "expiration_date": "04/01/2024"
             }
         ]
     },
@@ -115,13 +121,14 @@
         "dob": "12/05/1995",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8839",
-                "date_of_service": "2024/01/22",
+                "date_of_service": "01/22/2024",
                 "status": "Approved",
                 "service_requested": "Physical Therapy 10 Sessions",
-                "expiration_date": "2024/07/22"
+                "expiration_date": "07/22/2024"
             }
         ]
     },
@@ -129,10 +136,11 @@
         "dob": "08/17/1982",
         "type": "provider",
         "npi_number": "894584517",
+        "tax_id": "894584517",
         "auth_data": [
             {
                 "auth_id": "AUTH-8840",
-                "date_of_service": "2023/12/20",
+                "date_of_service": "12/20/2023",
                 "status": "Denied",
                 "service_requested": "Elective Cosmetic Surgery",
                 "denial_reason": "Not medically necessary"
@@ -143,17 +151,18 @@
         "dob": "01/29/1970",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8841",
-                "date_of_service": "2024/02/05",
+                "date_of_service": "02/05/2024",
                 "status": "Approved",
                 "service_requested": "Routine Colonoscopy",
-                "expiration_date": "2024/08/05"
+                "expiration_date": "08/05/2024"
             },
             {
                 "auth_id": "AUTH-8842",
-                "date_of_service": "2024/02/15",
+                "date_of_service": "02/15/2024",
                 "status": "Denied",
                 "service_requested": "Experimental Treatment",
                 "denial_reason": "Service is considered investigational"
@@ -164,17 +173,18 @@
         "dob": "06/11/1992",
         "type": "provider",
         "npi_number": "234875937",
+        "tax_id": "234875937",
         "auth_data": [
             {
                 "auth_id": "AUTH-8843",
-                "date_of_service": "2024/01/30",
+                "date_of_service": "01/30/2024",
                 "status": "Pending",
                 "service_requested": "Speech Therapy",
                 "expiration_date": null
             },
             {
                 "auth_id": "AUTH-8844",
-                "date_of_service": "2024/02/02",
+                "date_of_service": "02/02/2024",
                 "status": "Pending",
                 "service_requested": "Occupational Therapy",
                 "expiration_date": null
@@ -185,13 +195,14 @@
         "dob": "10/09/1986",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8845",
-                "date_of_service": "2023/08/14",
+                "date_of_service": "08/14/2023",
                 "status": "Approved",
                 "service_requested": "Maternity Care Stay",
-                "expiration_date": "2024/02/14"
+                "expiration_date": "02/14/2024"
             }
         ]
     },
@@ -199,10 +210,11 @@
         "dob": "05/20/1955",
         "type": "provider",
         "npi_number": "120395847",
+        "tax_id": "120395847",
         "auth_data": [
             {
                 "auth_id": "AUTH-8846",
-                "date_of_service": "2023/11/02",
+                "date_of_service": "11/02/2023",
                 "status": "Denied",
                 "service_requested": "Home Health Aide",
                 "denial_reason": "Insufficient clinical documentation provided"
@@ -213,13 +225,14 @@
         "dob": "03/03/2005",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8847",
-                "date_of_service": "2024/02/10",
+                "date_of_service": "02/10/2024",
                 "status": "Approved",
                 "service_requested": "Orthodontic Services",
-                "expiration_date": "2024/08/10"
+                "expiration_date": "08/10/2024"
             }
         ]
     },
@@ -227,10 +240,11 @@
         "dob": "09/27/1998",
         "type": "provider",
         "npi_number": "273849506",
+        "tax_id": "273849506",
         "auth_data": [
             {
                 "auth_id": "AUTH-8848",
-                "date_of_service": "2024/01/15",
+                "date_of_service": "01/15/2024",
                 "status": "Pending",
                 "service_requested": "Pain Management Injection",
                 "expiration_date": null
@@ -241,13 +255,14 @@
         "dob": "12/12/1979",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8849",
-                "date_of_service": "2023/10/28",
+                "date_of_service": "10/28/2023",
                 "status": "Approved",
                 "service_requested": "Cataract Surgery",
-                "expiration_date": "2024/04/28"
+                "expiration_date": "04/28/2024"
             }
         ]
     },
@@ -255,13 +270,14 @@
         "dob": "04/18/1968",
         "type": "provider",
         "npi_number": "932384560",
+        "tax_id": "932384560",
         "auth_data": [
             {
                 "auth_id": "AUTH-8850",
-                "date_of_service": "2023/12/10",
+                "date_of_service": "12/10/2023",
                 "status": "Approved",
                 "service_requested": "Joint Replacement Surgery",
-                "expiration_date": "2024/06/10"
+                "expiration_date": "06/10/2024"
             }
         ]
     },
@@ -269,10 +285,11 @@
         "dob": "01/08/1991",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8851",
-                "date_of_service": "2024/02/01",
+                "date_of_service": "02/01/2024",
                 "status": "Denied",
                 "service_requested": "Bariatric Surgery",
                 "denial_reason": "Member does not meet clinical criteria"
@@ -283,10 +300,11 @@
         "dob": "06/25/1984",
         "type": "provider",
         "npi_number": "124435321",
+        "tax_id": "124435321",
         "auth_data": [
             {
                 "auth_id": "AUTH-8852",
-                "date_of_service": "2024/01/05",
+                "date_of_service": "01/05/2024",
                 "status": "Pending",
                 "service_requested": "Specialty Medication Infusion",
                 "expiration_date": null
@@ -297,20 +315,21 @@
         "dob": "11/14/2000",
         "type": "patient",
         "npi_number": null,
+        "tax_id": null,
         "auth_data": [
             {
                 "auth_id": "AUTH-8853",
-                "date_of_service": "2023/09/30",
+                "date_of_service": "09/30/2023",
                 "status": "Approved",
                 "service_requested": "Allergy Testing",
-                "expiration_date": "2024/03/30"
+                "expiration_date": "03/30/2024"
             },
             {
                 "auth_id": "AUTH-8854",
-                "date_of_service": "2023/11/05",
+                "date_of_service": "11/05/2023",
                 "status": "Approved",
                 "service_requested": "Immunotherapy",
-                "expiration_date": "2024/05/05"
+                "expiration_date": "05/05/2024"
             }
         ]
     },
@@ -318,17 +337,18 @@
         "dob": "08/02/1973",
         "type": "provider",
         "npi_number": "638362938",
+        "tax_id": "638362938",
         "auth_data": [
             {
                 "auth_id": "AUTH-8855",
-                "date_of_service": "2023/11/20",
+                "date_of_service": "11/20/2023",
                 "status": "Approved",
                 "service_requested": "Cardiac Catheterization",
-                "expiration_date": "2024/05/20"
+                "expiration_date": "05/20/2024"
             },
             {
                 "auth_id": "AUTH-8856",
-                "date_of_service": "2023/12/05",
+                "date_of_service": "12/05/2023",
                 "status": "Denied",
                 "service_requested": "Out of Network Referral",
                 "denial_reason": "In-network providers are available for this service"

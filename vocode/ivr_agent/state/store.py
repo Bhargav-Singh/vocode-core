@@ -22,12 +22,16 @@ class IVRState(TypedDict):
 
     # --- Auth Flow Specific Slots ---
     npi: Optional[str]
+    tax_id: Optional[str]
+    service_date: Optional[str]
     user_role: Optional[Literal["PATIENT", "PROVIDER"]]
 
     # --- Temporary Slots (For Confirmation Loops) ---
     temp_member_id: Optional[str]
     temp_dob: Optional[str]
     temp_npi: Optional[str]
+    temp_tax_id: Optional[str]
+    temp_service_date: Optional[str]
 
     # --- RETRY TRACKER ---
     # Stores counts like {"member_id": 1, "dob": 2}

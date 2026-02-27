@@ -214,7 +214,7 @@ class IntentRouter:
             # If Unknown, loop back (or you could route to fallback_node first)
             return Command(goto="greet_and_listen")
 
-        async def route_after_subgraph(state: IVRState) -> Literal["greet_and_listen", "transfer_handoff", END]:
+        async def route_after_subgraph(state: IVRState) -> Literal["greet_and_listen", "transfer_handoff", "final_node"]:
             """
             Decides what to do when a Subgraph finishes.
             It checks the 'dialogue_status' set by the subgraph's cleanup node.
@@ -232,7 +232,7 @@ class IntentRouter:
                 return "transfer_handoff"
                 
             # Default: End call if unknown status
-            return END
+            return "final_node"
 
    
         # --- Add Nodes ---

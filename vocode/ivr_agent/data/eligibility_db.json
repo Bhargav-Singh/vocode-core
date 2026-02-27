@@ -6,17 +6,17 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Premium Choice PPO",
-                "effective_date": "2023/01/01",
+                "effective_date": "01/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 25.00
+                "office_visit_copay": 25.0
             },
             {
                 "coverage_type": "Dental",
                 "status": "Active",
                 "plan_name": "SmileGuard Basic",
-                "effective_date": "2023/01/01",
+                "effective_date": "01/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 10.00
+                "office_visit_copay": 10.0
             }
         ]
     },
@@ -27,9 +27,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Standard HMO",
-                "effective_date": "2024/01/01",
+                "effective_date": "01/01/2024",
                 "termination_date": null,
-                "office_visit_copay": 15.00
+                "office_visit_copay": 15.0
             }
         ]
     },
@@ -40,9 +40,9 @@
                 "coverage_type": "Medical",
                 "status": "Inactive",
                 "plan_name": "Standard HMO",
-                "effective_date": "2022/01/01",
-                "termination_date": "2023/12/31",
-                "office_visit_copay": 0.00
+                "effective_date": "01/01/2022",
+                "termination_date": "12/31/2023",
+                "office_visit_copay": 0.0
             }
         ]
     },
@@ -53,9 +53,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "High Deductible Health Plan",
-                "effective_date": "2023/06/01",
+                "effective_date": "06/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 0.00
+                "office_visit_copay": 0.0
             }
         ]
     },
@@ -66,17 +66,17 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Student Health Basic",
-                "effective_date": "2023/08/15",
+                "effective_date": "08/15/2023",
                 "termination_date": null,
-                "office_visit_copay": 20.00
+                "office_visit_copay": 20.0
             },
             {
                 "coverage_type": "Vision",
                 "status": "Inactive",
                 "plan_name": "ClearSight Vision",
-                "effective_date": "2022/08/15",
-                "termination_date": "2023/08/14",
-                "office_visit_copay": 15.00
+                "effective_date": "08/15/2022",
+                "termination_date": "08/14/2023",
+                "office_visit_copay": 15.0
             }
         ]
     },
@@ -87,9 +87,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Medicare Advantage Plus",
-                "effective_date": "2020/01/01",
+                "effective_date": "01/01/2020",
                 "termination_date": null,
-                "office_visit_copay": 10.00
+                "office_visit_copay": 10.0
             }
         ]
     },
@@ -100,9 +100,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Essential EPO",
-                "effective_date": "2024/02/01",
+                "effective_date": "02/01/2024",
                 "termination_date": null,
-                "office_visit_copay": 30.00
+                "office_visit_copay": 30.0
             }
         ]
     },
@@ -113,9 +113,9 @@
                 "coverage_type": "Medical",
                 "status": "Inactive",
                 "plan_name": "Premium Choice PPO",
-                "effective_date": "2021/05/01",
-                "termination_date": "2023/04/30",
-                "office_visit_copay": 25.00
+                "effective_date": "05/01/2021",
+                "termination_date": "04/30/2023",
+                "office_visit_copay": 25.0
             }
         ]
     },
@@ -126,9 +126,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Standard HMO",
-                "effective_date": "2022/11/01",
+                "effective_date": "11/01/2022",
                 "termination_date": null,
-                "office_visit_copay": 20.00
+                "office_visit_copay": 20.0
             }
         ]
     },
@@ -139,17 +139,17 @@
                 "coverage_type": "Dental",
                 "status": "Active",
                 "plan_name": "SmileGuard Premium",
-                "effective_date": "2023/03/01",
+                "effective_date": "03/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 0.00
+                "office_visit_copay": 0.0
             },
             {
                 "coverage_type": "Vision",
                 "status": "Active",
                 "plan_name": "ClearSight Vision",
-                "effective_date": "2023/03/01",
+                "effective_date": "03/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 15.00
+                "office_visit_copay": 15.0
             }
         ]
     },
@@ -160,9 +160,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "State Employee Health Plan",
-                "effective_date": "2019/01/01",
+                "effective_date": "01/01/2019",
                 "termination_date": null,
-                "office_visit_copay": 15.00
+                "office_visit_copay": 15.0
             }
         ]
     },
@@ -173,9 +173,9 @@
                 "coverage_type": "Medical",
                 "status": "Inactive",
                 "plan_name": "Medicare Supplement",
-                "effective_date": "2021/01/01",
-                "termination_date": "2023/12/31",
-                "office_visit_copay": 0.00
+                "effective_date": "01/01/2021",
+                "termination_date": "12/31/2023",
+                "office_visit_copay": 0.0
             }
         ]
     },
@@ -186,9 +186,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Family Core PPO",
-                "effective_date": "2023/01/01",
+                "effective_date": "01/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 20.00
+                "office_visit_copay": 20.0
             }
         ]
     },
@@ -199,9 +199,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Young Adult EPO",
-                "effective_date": "2024/01/01",
+                "effective_date": "01/01/2024",
                 "termination_date": null,
-                "office_visit_copay": 35.00
+                "office_visit_copay": 35.0
             }
         ]
     },
@@ -212,9 +212,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "High Deductible Health Plan",
-                "effective_date": "2022/01/01",
+                "effective_date": "01/01/2022",
                 "termination_date": null,
-                "office_visit_copay": 0.00
+                "office_visit_copay": 0.0
             }
         ]
     },
@@ -225,9 +225,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Premium Choice PPO",
-                "effective_date": "2020/07/01",
+                "effective_date": "07/01/2020",
                 "termination_date": null,
-                "office_visit_copay": 25.00
+                "office_visit_copay": 25.0
             }
         ]
     },
@@ -238,9 +238,9 @@
                 "coverage_type": "Medical",
                 "status": "Inactive",
                 "plan_name": "Essential EPO",
-                "effective_date": "2023/01/01",
-                "termination_date": "2023/06/30",
-                "office_visit_copay": 30.00
+                "effective_date": "01/01/2023",
+                "termination_date": "06/30/2023",
+                "office_visit_copay": 30.0
             }
         ]
     },
@@ -251,17 +251,17 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Standard HMO",
-                "effective_date": "2024/03/01",
+                "effective_date": "03/01/2024",
                 "termination_date": null,
-                "office_visit_copay": 15.00
+                "office_visit_copay": 15.0
             },
             {
                 "coverage_type": "Dental",
                 "status": "Active",
                 "plan_name": "SmileGuard Basic",
-                "effective_date": "2024/03/01",
+                "effective_date": "03/01/2024",
                 "termination_date": null,
-                "office_visit_copay": 10.00
+                "office_visit_copay": 10.0
             }
         ]
     },
@@ -272,9 +272,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Student Health Basic",
-                "effective_date": "2023/09/01",
+                "effective_date": "09/01/2023",
                 "termination_date": null,
-                "office_visit_copay": 20.00
+                "office_visit_copay": 20.0
             }
         ]
     },
@@ -285,9 +285,9 @@
                 "coverage_type": "Medical",
                 "status": "Active",
                 "plan_name": "Premium Choice PPO",
-                "effective_date": "2021/10/01",
+                "effective_date": "10/01/2021",
                 "termination_date": null,
-                "office_visit_copay": 25.00
+                "office_visit_copay": 25.0
             }
         ]
     }
