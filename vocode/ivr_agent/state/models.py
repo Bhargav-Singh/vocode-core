@@ -10,9 +10,9 @@ class IntentClassifierOutputSchema(BaseModel):
 
 class BinaryConfirmationOutputSchema(BaseModel):
     """Schema for validating Yes/No confirmation responses."""
-    confirmation: Literal["1", "2"] = Field(
+    confirmation: Literal["1", "2", "0"] = Field(
         ..., 
-        description="Return '1' if the user confirms (Yes, Correct, Right, Yeah, Yep, Sure, OK, That matches). Return '2' if the user denies (No, Wrong, Incorrect, Wait, Stop, I don't think so)."
+        description="Return '1' if the user confirms (Yes, Correct, Right, Yeah, Yep, Sure, OK, That matches). Return '2' if the user denies (No, Wrong, Incorrect, Wait, Stop, I don't think so). Return '0' if the user provides no response or not clear response."
     )
 
     command: Literal["TRANSFER", "MAIN_MENU", "EXIT", "None"] | str = Field(

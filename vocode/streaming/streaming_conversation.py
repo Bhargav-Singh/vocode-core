@@ -167,6 +167,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
             if self.has_associated_unignored_utterance:
                 return False
             bot_still_speaking = self.is_bot_still_speaking()
+            logger.info(f"Utterance: '{transcription.message}' | Bot Speaking: {bot_still_speaking} BY SHUBH PATEL")
             if self.has_associated_ignored_utterance or bot_still_speaking:
                 logger.info(
                     f"Associated ignored utterance: {self.has_associated_ignored_utterance}. Bot still speaking: {bot_still_speaking}"

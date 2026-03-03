@@ -34,7 +34,8 @@ from vocode.ivr_agent.flows.intent_router import IntentRouter
 from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
 from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
-from vocode.streaming.models.transcriber import GoogleTranscriberConfig
+from vocode.streaming.transcriber.assembly_ai_transcriber import AssemblyAITranscriber
+from vocode.streaming.models.transcriber import GoogleTranscriberConfig, AssemblyAITranscriberConfig
 from vocode.ivr_agent.utilities.llm_initializer import Gemini
 
 def load_env_if_available(*paths: str) -> None:

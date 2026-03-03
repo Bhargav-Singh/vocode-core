@@ -34,7 +34,7 @@ def now():
 
 class TimeSilentConfig(BaseModel):
     time_cutoff_seconds: float = 1
-    post_punctuation_time_seconds: float = 0.5
+    post_punctuation_time_seconds: float = 0.8
 
 
 class InternalPunctuationEndpointingConfig(  # type: ignore
@@ -45,7 +45,7 @@ class InternalPunctuationEndpointingConfig(  # type: ignore
 
 
 class DeepgramEndpointingConfig(EndpointingConfig, type="deepgram"):  # type: ignore
-    vad_threshold_ms: int = 500
+    vad_threshold_ms: int = 1000
     utterance_cutoff_ms: int = 1000
     time_silent_config: Optional[TimeSilentConfig] = Field(default_factory=TimeSilentConfig)
     use_single_utterance_endpointing_for_first_utterance: bool = False
@@ -127,10 +127,6 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
         extra_params = {}
         if self.transcriber_config.language:
             extra_params["language"] = self.transcriber_config.language
-        if self.transcriber_config.smart_format:
-            extra_params["smart_format"] = self.transcriber_config.smart_format
-        if self.transcriber_config.numerals:
-            extra_params["numerals"] = self.transcriber_config.numerals
         if self.transcriber_config.model:
             extra_params["model"] = self.transcriber_config.model
         if self.transcriber_config.tier:
@@ -248,7 +244,15 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
         time_silent_config: TimeSilentConfig,
         existing_log_params: dict,
     ) -> bool:
+        """
+        This function is vocode special implementation of endpointing. it works on the hybrid approach punctuation based endpointing and time based endpointing.
+        if the last character of the current buffer is punctuation and the time silent is greater than the post punctuation time seconds, then it is an endpoint.
+        if the time silent is greater than the time cutoff seconds, then it is an endpoint.
+        """
+        
         if current_buffer.strip():
+            # logger.debug(f"Checking endpointing for buffer: '{current_buffer}'| time_silent: {time_silent}s BY SHUBH PATEL")
+
             if current_buffer.strip()[
                 -1
             ] in PUNCTUATION_TERMINATORS and self._satisfies_time_cutoff(
@@ -258,6 +262,7 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                 current_buffer=current_buffer,
                 time_silent=time_silent,
             ):
+                # logger.debug(f"Vocode Post punctuation detected for buffer: '{current_buffer}' | time_silent: {time_silent}s BY SHUBH PATEL")
                 existing_log_params["source"] = "punctuation"
                 return True
             elif self._satisfies_time_cutoff(
@@ -267,6 +272,7 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                 current_buffer=current_buffer,
                 time_silent=time_silent,
             ):
+                # logger.debug(f"Vocode Time cutoff detected for buffer: '{current_buffer}' | time_silent: {time_silent}s BY SHUBH PATEL")
                 existing_log_params["source"] = "time_cutoff"
                 return True
         return False
@@ -312,13 +318,16 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                     and deepgram_response.top_choice.transcript.strip()[-1]
                     in PUNCTUATION_TERMINATORS
                 ):
+                    logger.info("Endpoint detected by SHUBH Patel", extra=log_params)
                     log_params["source"] = "is_final"
                     return True, log_params
             if isinstance(deepgram_response, DeepgramUtteranceEnd):
+                # logger.info("Endpoint detected with the help of DeepGramUtteranceEnd by SHUBH Patel", extra=log_params)
                 log_params["source"] = "utterance_end"
                 return True, log_params
             elif isinstance(deepgram_response, DeepgramTranscriptionResult):
                 if deepgram_response.top_choice.transcript and deepgram_response.speech_final:
+                    # logger.info("Endpoint detected with the help of deepgram speech final by SHUBH Patel", extra=log_params)
                     log_params["source"] = "speech_final"
                     return True, log_params
                 elif (
@@ -434,6 +443,7 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                     while not self._ended:
                         try:
                             msg = await ws.recv()
+                            logger.info(f"RAW DEEPGRAM RESPONSE: {msg}")
                             if not self.start_receiving_ts:
                                 self.start_receiving_ts = now()
                         except Exception as e:
@@ -599,6 +609,12 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
         if not (output_ts > is_final_ts):  # > is_final_spoken_ts
             logger.error("Skipping latency measurement when timestamps are not in order")
             return
+        # logger.info(
+        #     f"Vocode Decided speaker was done(endpoint) and sent message to agent: {output_ts} BY SHUBH PATEL"
+        # )
+        # logger.info(
+        #     f"Vocode received the finalized text from deepgram: {is_final_ts} BY SHUBH PATEL"
+        # )
         logger.debug(
             f"Endpoint detected, tracking endpointing_latency={output_ts - is_final_ts}",
         )

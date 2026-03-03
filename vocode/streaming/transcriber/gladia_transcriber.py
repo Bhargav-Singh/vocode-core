@@ -46,12 +46,14 @@ class GladiaTranscriber(BaseAsyncTranscriber[GladiaTranscriberConfig]):
             if isinstance(chunk, np.ndarray):
                 chunk = chunk.astype(np.int16)
                 chunk = chunk.tobytes()
-            chunk = audioop.ulaw2lin(chunk, sample_width)
+            # chunk = audioop.ulaw2lin(chunk, sample_width)       ## This line commented because this convert the audio into linear16 means from 1 byte chunk into 2 byte. twlio sends the 1 byte mulaw audio encoding chunk. but this line convert the audio chunk into 2 byte linear16. and gladia expects the 1 byte mulaw audio encoding chunk.
 
         self.buffer.extend(chunk)
 
+        bytes_per_sample = 1 if self.transcriber_config.audio_encoding == AudioEncoding.MULAW else 2
+
         if (
-            len(self.buffer) / (2 * self.transcriber_config.sampling_rate)
+            len(self.buffer) / (bytes_per_sample * self.transcriber_config.sampling_rate)
         ) >= self.transcriber_config.buffer_size_seconds:
             self.consume_nonblocking(self.buffer)
             self.buffer = bytearray()
@@ -62,6 +64,7 @@ class GladiaTranscriber(BaseAsyncTranscriber[GladiaTranscriberConfig]):
 
     async def process(self):
         async with websockets.connect(GLADIA_URL) as ws:
+            logger.debug("Connected to Gladia BY SHUBH PATEL")
             await ws.send(
                 json.dumps(
                     {
@@ -78,7 +81,9 @@ class GladiaTranscriber(BaseAsyncTranscriber[GladiaTranscriberConfig]):
                         data = await asyncio.wait_for(self._input_queue.get(), 5)
                     except asyncio.exceptions.TimeoutError:
                         break
-
+                    
+                    logger.debug("Sending audio to Gladia BY SHUBH PATEL")
+                    
                     await ws.send(
                         json.dumps(
                             {
@@ -104,6 +109,7 @@ class GladiaTranscriber(BaseAsyncTranscriber[GladiaTranscriberConfig]):
                         is_final = data["type"] == "final"
 
                         if "transcription" in data and data["transcription"]:
+                            logger.debug(f"Received transcription from Gladia BY SHUBH PATEL: {data}")
                             self.produce_nonblocking(
                                 Transcription(
                                     message=data["transcription"],

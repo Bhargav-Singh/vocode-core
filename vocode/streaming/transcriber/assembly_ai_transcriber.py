@@ -89,14 +89,14 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
         return self.transcriber_config.downsampling or self.transcriber_config.sampling_rate
 
     def send_audio(self, chunk):
-        if self.debug:
-            logger.debug(f"[AAI] enqueue audio chunk bytes={len(chunk)}")
+        # if self.debug:
+        #     logger.debug(f"[AAI] enqueue audio chunk bytes={len(chunk)}")
         if self.transcriber_config.audio_encoding == AudioEncoding.MULAW:
             sample_width = 1
             if isinstance(chunk, np.ndarray):
                 chunk = chunk.astype(np.int16)
                 chunk = chunk.tobytes()
-            chunk = audioop.ulaw2lin(chunk, sample_width)
+            # chunk = audioop.ulaw2lin(chunk, sample_width)        ## This line commented because this convert the audio into linear16 means from 1 byte chunk into 2 byte. twlio sends the 1 byte mulaw audio encoding chunk. but this line convert the audio chunk into 2 byte linear16. and gladia expects the 1 byte mulaw audio encoding chunk.
 
         # Optional downsampling for LINEAR16
         target_rate = self.transcriber_config.downsampling
@@ -121,8 +121,10 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
 
         self.buffer.extend(chunk)
 
+        bytes_per_sample = 1 if self.transcriber_config.audio_encoding == AudioEncoding.MULAW else 2
+
         if (
-            len(self.buffer) / (2 * self.transcriber_config.sampling_rate)
+            len(self.buffer) / (bytes_per_sample * self.transcriber_config.sampling_rate)
         ) >= self.transcriber_config.buffer_size_seconds:
             self.consume_nonblocking(self.buffer)
             self.buffer = bytearray()
@@ -134,6 +136,7 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
     def get_assembly_ai_url(self):
         sr = self._effective_sampling_rate()
         if self._is_v3:
+            logger.info("ASSEMBLY AI v3 websocket url intialize")
             params = {"sample_rate": str(sr)}
             # encoding mapping for v3
             if self.transcriber_config.audio_encoding == AudioEncoding.LINEAR16:
@@ -147,6 +150,9 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
             fmt = getattr(self.transcriber_config, "format_turns", None)
             if fmt is not None:
                 params["format_turns"] = "true" if fmt else "false"
+            key_prompt = getattr(self.transcriber_config, "keyterms_prompt", None)
+            if key_prompt is not None:
+                params["keyterms_prompt"] = json.dumps(key_prompt)
             min_sil = getattr(
                 self.transcriber_config, "min_end_of_turn_silence_when_confident_ms", None
             )
@@ -213,8 +219,7 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
                             if self.debug:
                                 logger.debug(f"[AAI] sent config: {config_payload}")
                         except Exception as e:
-                            if self.debug:
-                                logger.debug(f"[AAI] failed to send config (non-fatal): {e}")
+                            logger.error(f"[AAI] failed to send config (non-fatal): {e}")
 
                     # Fallback legacy message
                     if (
@@ -230,14 +235,16 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
                     async def sender(ws):  # sends audio to websocket
                         while not self._ended:
                             try:
-                                data = await asyncio.wait_for(self._input_queue.get(), 5)
+                                data = await asyncio.wait_for(self._input_queue.get(), 30)
                             except asyncio.exceptions.TimeoutError:
                                 break
                             num_channels = 1
                             sample_width = 2
-                            self.audio_cursor += len(data) / (
-                                self._effective_sampling_rate() * num_channels * sample_width
-                            )
+                            bytes_per_sample = 1 if self.transcriber_config.audio_encoding == AudioEncoding.MULAW else 2
+                            self.audio_cursor += len(data) / (self._effective_sampling_rate() * bytes_per_sample)
+                            # self.audio_cursor += len(data) / (
+                            #     self._effective_sampling_rate() * num_channels * sample_width
+                            # )
                             if self._is_v3:
                                 await ws.send(data)
                             else:
@@ -322,8 +329,7 @@ class AssemblyAITranscriber(BaseAsyncTranscriber[AssemblyAITranscriberConfig]):
 
                     await asyncio.gather(sender(ws), receiver(ws))
             except Exception as e:
-                if self.debug:
-                    logger.debug(f"[AAI] websocket/connect error: {e}")
+                logger.error(f"[AAI] websocket/connect error: {e}")
 
             if self._ended:
                 break

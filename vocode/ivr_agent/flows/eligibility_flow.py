@@ -122,6 +122,9 @@ class EligibilityFlow:
                     goto="ask_dob", 
                     update={"last_user_input": "1", "member_id": member_id, "retries": {}}
                 )
+
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_member_id", update={"temp_member_id": "", "retries": {}})
             
             # Retry Logic (Go back to Ask ID)
             new_retries = self.increment_retries(state, "confirm_member_id")
@@ -179,6 +182,9 @@ class EligibilityFlow:
                     goto="fetch_details", 
                     update={"last_user_input": "1", "dob": dob, "retries": {}}
                 )
+
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_dob", update={"temp_dob": "", "retries": {}})
 
             # Retry Logic (Go back to Ask DOB)
             new_retries = self.increment_retries(state, "confirm_dob")

@@ -1,3 +1,10 @@
+from pathlib import Path
+import sys
+# Ensure repo root is on sys.path for local imports
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 # Standard library imports
 import os
 import sys
@@ -22,8 +29,8 @@ from vocode.streaming.telephony.server.base import TelephonyServer, TwilioInboun
 from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
 from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.transcriber.google_transcriber import GoogleTranscriber
-from vocode.streaming.models.transcriber import GoogleTranscriberConfig, DeepgramTranscriberConfig
-from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig
+from vocode.streaming.models.transcriber import GoogleTranscriberConfig, DeepgramTranscriberConfig, AssemblyAITranscriberConfig, GladiaTranscriberConfig
+from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig, TimeSilentConfig
 
 # if running from python, this will load the local .env
 # docker-compose will load the .env file by itself
@@ -71,18 +78,40 @@ telephony_server = TelephonyServer(
                 google_api_key=os.environ["GOOGLE_API_KEY"],
             ),
             # transcriber_config=GoogleTranscriberConfig.from_telephone_input_device(
-            #             model="telephony",
             #             api_key=os.environ["GOOGLE_API_KEY"],
             #         ),
-            transcriber_config=DeepgramTranscriberConfig.from_telephone_input_device(
-                model="nova-2",
-                language="en",
-                smart_format=True,
-                numerals=True,
-                endpointing_config=DeepgramEndpointingConfig(),
-                keywords=["claim", "status", "auth", "status", "eligibility", "eligible", "feb", "august", "double"],
-                api_key=os.environ["DEEPGRAM_API_KEY"],
+            
+            # transcriber_config=DeepgramTranscriberConfig.from_telephone_input_device(
+            #     model="nova-2", # Optimized for 8kHz telephony
+            #     language="en-us",
+            #     endpointing_config=DeepgramEndpointingConfig(
+            #         vad_threshold_ms=1000,
+            #         utterance_cutoff_ms=1000,
+            #         time_silent_config=TimeSilentConfig(
+            #             time_cutoff_seconds=1.0,
+            #             post_punctuation_time_seconds=0.8,
+            #         ),
+            #     ),
+            #     keywords=["claim", "status", "auth", "status", "eligibility", "eligible", "feb", "august", "double", "patient", "provider", "date of birth", "service date", "member id", "npi", "tax", "id"],
+            #     api_key=os.environ["DEEPGRAM_API_KEY"],
+            # ),
+
+            transcriber_config=AssemblyAITranscriberConfig.from_telephone_input_device(
+                # Newer AssemblyAI realtime requires selecting a model (e.g., "universal")
+                model="universal",
+                # v3 Streaming optional params
+                end_of_turn_confidence_threshold=0.95,
+                # The confidence threshold for triggering an "end of turn" signal.
+                ws_url="wss://streaming.assemblyai.com/v3/ws",
+                format_turns=False,    
+                # Format Turns becomes false because for formatting the transcription used the LLM model which takes more time.
+                min_end_of_turn_silence_when_confident_ms=1000,
+                # The minimum amount of silence required to trigger an "end of turn" signal once the confidence threshold is met.
+                mute_during_speech=False,
+                max_turn_silence_ms=1200,
+                keyterms_prompt=["claim", "status", "auth", "authorization", "eligibility", "eligible", "feb", "august", "double", "patient", "provider", "date of birth", "service date", "member", "npi", "tax", "id", "august", "february", "december", "January"],
             ),
+
             synthesizer_config=GoogleSynthesizerConfig.from_telephone_output_device(
                         language_code="en-US",
                         voice_name="en-US-Neural2-D",

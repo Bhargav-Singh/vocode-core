@@ -152,6 +152,9 @@ class AuthFlow:
                     goto="ask_dob", 
                     update={"last_user_input": "1", "member_id": member_id, "retries": {}}
                 )
+
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_member_id", update={"temp_member_id": "", "retries": {}})
             
             # Retry Logic (Go back to Ask ID)
             new_retries = self.increment_retries(state, "confirm_member_id")
@@ -209,6 +212,9 @@ class AuthFlow:
                     goto="ask_patient_provider", 
                     update={"last_user_input": "1", "dob": dob_date, "retries": {}}
                 )
+
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_dob", update={"temp_dob": "", "retries": {}})
             
             # Retry Logic (Go back to Ask DOB)
             new_retries = self.increment_retries(state, "confirm_dob")
@@ -345,6 +351,9 @@ class AuthFlow:
                     update={"last_user_input": "1", "npi": npi, "retries": {}}
                 )
 
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_npi", update={"temp_npi": "", "retries": {}})
+
             # Retry Logic (Go back to Ask NPI)
             new_retries = self.increment_retries(state, "confirm_npi")
             if new_retries["retries"]["confirm_npi"] > self.MAX_RETRIES: 
@@ -418,6 +427,9 @@ class AuthFlow:
                     update={"last_user_input": "1", "tax_id": tax_id, "retries": {}}
                 )
 
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_tax_id", update={"temp_tax_id": "", "retries": {}})
+            
             # Retry Logic (Go back to Ask NPI)
             new_retries = self.increment_retries(state, "confirm_tax_id")
             if new_retries["retries"]["confirm_tax_id"] > self.MAX_RETRIES: 
@@ -473,6 +485,9 @@ class AuthFlow:
                     goto="fetch_auth_details",
                     update={"last_user_input": "1", "service_date": service_date, "retries": {}}
                 )
+            
+            elif parsed.confirmation == "2":
+                return Command(goto="ask_servicedate", update={"temp_service_date": "", "retries": {}})
             
             # Retry Logic
             new_retries = self.increment_retries(state, "confirm_servicedate")
