@@ -21,7 +21,7 @@ from pyngrok import ngrok
 from speller_agent import SpellerAgentFactory
 
 from vocode.logging import configure_pretty_logging
-from vocode.streaming.models.agent import ChatGPTAgentConfig, IVRAgentConfig
+from vocode.streaming.models.agent import ChatGPTAgentConfig, IVRAgentConfig, CutOffResponse
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.telephony import TwilioConfig
 from vocode.streaming.telephony.config_manager.redis_config_manager import RedisConfigManager
@@ -57,6 +57,15 @@ if not BASE_URL:
 if not BASE_URL:
     raise ValueError("BASE_URL must be set in environment if not using pyngrok")
 
+
+polite_acknowledgments = CutOffResponse(
+    messages=[
+        BaseMessage(text="Yes, please?"),
+        BaseMessage(text="Go ahead, I'm listening."),
+        BaseMessage(text="Sure, what was that?"),
+    ]
+)
+
 telephony_server = TelephonyServer(
     base_url=BASE_URL,
     config_manager=config_manager,
@@ -75,6 +84,7 @@ telephony_server = TelephonyServer(
                 interrupt_sensitivity="high",
                 num_check_human_present_times=4,
                 allowed_idle_time_seconds=10,
+                cut_off_response=polite_acknowledgments,
                 google_api_key=os.environ["GOOGLE_API_KEY"],
             ),
             # transcriber_config=GoogleTranscriberConfig.from_telephone_input_device(
@@ -141,4 +151,4 @@ app.include_router(telephony_server.get_router())
 
 if __name__ == "__main__":
     # This starts the server and stops the script from exiting
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=3000, timeout_keep_alive=30)

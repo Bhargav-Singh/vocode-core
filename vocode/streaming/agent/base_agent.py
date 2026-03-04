@@ -144,10 +144,10 @@ class AbstractAgent(Generic[AgentConfigType]):
         pass
 
     def get_cut_off_response(self) -> str:
-        assert isinstance(self.agent_config, LLMAgentConfig) or isinstance(
-            self.agent_config,
-            ChatGPTAgentConfig,
-        ), "Set cutoff response is only implemented in LLMAgent and ChatGPTAgent"
+        # assert isinstance(self.agent_config, LLMAgentConfig) or isinstance(
+        #     self.agent_config,
+        #     ChatGPTAgentConfig,
+        # ), "Set cutoff response is only implemented in LLMAgent and ChatGPTAgent"
         assert self.agent_config.cut_off_response is not None
         on_cut_off_messages = self.agent_config.cut_off_response.messages
         assert len(on_cut_off_messages) > 0
@@ -234,12 +234,15 @@ class RespondAgent(BaseAgent[AgentConfigType]):
                     message=BaseMessage(text=cut_off_response),
                     is_interruptible=False,
                 )
-                return
+                # return
+                # Allowing the code to continue means it will proceed to the LLM response.
+
             if transcription.bot_was_in_medias_res:
                 silence_message = SilenceMessage()
-                silence_message.trailing_silence_seconds = self._get_speed_adjusted_silence_seconds(
-                    silence_message.trailing_silence_seconds
-                )
+                silence_message.trailing_silence_seconds = 0.3
+                # silence_message.trailing_silence_seconds = self._get_speed_adjusted_silence_seconds(
+                #     silence_message.trailing_silence_seconds
+                # )
                 yield GeneratedResponse(message=silence_message, is_interruptible=True)
         async for response in responses_stream:
             yield response
