@@ -134,6 +134,7 @@ class GladiaTranscriberConfig(TranscriberConfig, type=TranscriberType.GLADIA.val
 class GoogleTranscriberConfig(TranscriberConfig, type=TranscriberType.GOOGLE.value):  # type: ignore
     model: Optional[str] = None
     language_code: str = "en-US"
+    api_key: Optional[str] = None
 
 
 class AzureTranscriberConfig(TranscriberConfig, type=TranscriberType.AZURE.value):  # type: ignore

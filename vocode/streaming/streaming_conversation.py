@@ -233,7 +233,10 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                 return
             # ignore utterances during the initial message but still add them to the transcript
             initial_message_ongoing = not self.conversation.initial_message_tracker.is_set()
-            if initial_message_ongoing or self.should_ignore_utterance(transcription):
+            if (
+                initial_message_ongoing
+                and not self.conversation.agent.get_agent_config().initial_message_interruptible
+            ) or self.should_ignore_utterance(transcription):
                 logger.info(
                     f"Ignoring utterance: {transcription.message}. IMO: {initial_message_ongoing}"
                 )
@@ -777,9 +780,10 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     # Stop the phone call after some retries to prevent infinitely long call where human is just silent.
                     await self.action_on_idle()
                 self.is_human_still_there = False
-                await self.send_single_message(
-                    message=BaseMessage(text=random.choice(CHECK_HUMAN_PRESENT_MESSAGE_CHOICES)),
-                )
+                self.receive_message("repeat") 
+                # await self.send_single_message(
+                #     message=BaseMessage(text=random.choice(CHECK_HUMAN_PRESENT_MESSAGE_CHOICES)),
+                # )
                 check_human_present_count += 1
             # wait till the idle time would have passed the threshold if no action occurs
             await asyncio.sleep(self.idle_time_threshold / 2)
@@ -792,7 +796,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
         agent_response_event = (
             self.interruptible_event_factory.create_interruptible_agent_response_event(
                 AgentResponseMessage(message=message, is_sole_text_chunk=True),
-                is_interruptible=False,
+                is_interruptible=(message==self.agent.get_agent_config().initial_message and self.agent.get_agent_config().initial_message_interruptible) if message_tracker == self.initial_message_tracker else False,
                 agent_response_tracker=message_tracker,
             )
         )

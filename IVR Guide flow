@@ -1,0 +1,387 @@
+QuickCap Voice Agent – Functional Flow Document
+
+Version: v1
+Source: Converted from QuickCap IVR User Guide → Conversational Voice Agent
+Target Stack:
+
+Twilio Voice (call handling)
+
+Vocode (voice orchestration)
+
+Deepgram (STT)
+
+ElevenLabs (TTS)
+
+OpenAI LLM (dialog + reasoning)
+
+Backend APIs (Claims / Auth / Eligibility)
+
+1. Overview
+
+This document defines the complete conversational voice flow to replace the legacy DTMF IVR with a human-like conversational AI agent.
+
+The agent must:
+
+Greet caller
+
+Understand natural language
+
+Ask for required information
+
+Validate inputs
+
+Call backend APIs
+
+Read results conversationally
+
+Offer repeat / restart / transfer options
+
+Handle corrections and retries
+
+The bot replaces the IVR menu but preserves ALL original business logic and decision paths.
+
+2. Call Entry Flow
+2.1 Call Start
+
+When a call is received:
+
+Agent says:
+
+"Thank you for calling. I can help you check claim status, authorization status, or member eligibility. How can I assist you today?"
+
+Intent Classification
+
+LLM must classify user intent into:
+
+Intent	Example Utterances
+CLAIM_STATUS	"check claim", "claim status", "payment for claim"
+AUTH_STATUS	"authorization", "pre approval", "auth status"
+ELIGIBILITY	"is member covered", "eligibility", "coverage"
+UNKNOWN	anything else
+
+If UNKNOWN → go to fallback flow.
+
+3. Shared Conversational Rules
+3.1 Universal Input Rules
+
+For every collected input:
+
+Ask for value
+
+Repeat value back
+
+Ask confirmation
+
+If incorrect → re-ask
+
+Retry policy:
+
+Max retries per field: 3
+
+After 3 failures → transfer to customer service.
+
+3.2 Confirmation Template
+
+After any input:
+
+"You said {value}. Is that correct?"
+
+If user says:
+
+Yes → continue
+
+No → ask again
+
+4. MAIN MENU STATE MACHINE
+START
+ ├── Claim Status Flow
+ ├── Authorization Flow
+ └── Eligibility Flow
+
+
+User can say anytime:
+
+"main menu"
+
+"start over"
+
+"agent"
+
+"representative"
+
+5. CLAIM STATUS FLOW
+5.1 Data Required
+Field	Format
+Member ID	numeric only
+DOB	MM/DD/YYYY
+Service Date	MM/DD/YYYY
+Caller Type	Patient / Provider
+NPI/Tax ID	only if Provider
+5.2 Step-by-Step Conversation
+Step 1 — Member ID
+
+Agent:
+
+"Please provide the member ID. Numbers only."
+
+Validate numeric.
+
+Confirm.
+
+Step 2 — Date of Birth
+
+Agent:
+
+"Please provide the member’s date of birth."
+
+Confirm.
+
+Step 3 — Service Date
+
+Agent:
+
+"Please provide the claim service date."
+
+Confirm.
+
+Step 4 — Caller Type Branch
+
+Agent:
+
+"Are you the patient or a provider?"
+
+Intent classification:
+
+Patient
+
+Provider
+
+5.3 PATIENT PATH
+
+Call backend:
+
+GET /claims?memberId&dob&serviceDate
+
+Multiple claims handling
+
+If multiple claims returned:
+
+Read each claim sequentially
+
+IMPORTANT:
+Patient path does NOT require NPI or Tax ID. 
+
+IVR User Guide (3) (1) (1)
+
+5.4 PROVIDER PATH
+
+Ask:
+
+"Please provide the NPI or Tax ID associated with the claim."
+
+Confirm → call API.
+
+GET /claims?memberId&dob&serviceDate&npiTaxId
+
+5.5 Deliver Results
+
+Agent summarizes:
+
+Claim status
+
+Payment status
+
+Dates
+
+Amounts
+
+5.6 Post-Result Menu (Claim Flow)
+
+Agent must offer options:
+
+Voice Option	Action
+Repeat	Repeat information
+Another claim	Restart claim flow
+Main menu	Go to main
+Not what I need	Transfer to customer service
+
+This exactly mirrors IVR post-options. 
+
+IVR User Guide (3) (1) (1)
+
+6. AUTHORIZATION STATUS FLOW
+6.1 Data Required
+Field	Required
+Member ID	Yes
+DOB	Yes
+Caller Type	Patient/Provider
+NPI/Tax ID	Only for Provider
+6.2 Steps
+Step 1 — Member ID
+Step 2 — DOB
+
+(same validation pattern)
+
+Step 3 — Caller Type Branch
+
+Agent:
+
+"Are you calling as the patient or a provider?"
+
+6.3 PATIENT AUTH PATH
+
+Call:
+
+GET /authorizations?memberId&dob
+
+If single authorization:
+
+Read authorization number + details.
+
+If multiple authorizations:
+
+Agent must present options:
+
+"I found multiple authorizations. Please choose by requested date."
+
+User selects date → fetch specific authorization.
+
+This branch is critical from IVR doc. 
+
+IVR User Guide (3) (1) (1)
+
+6.4 PROVIDER AUTH PATH
+
+Ask:
+
+"Please provide the NPI or Tax ID of the referring provider."
+
+Call:
+
+GET /authorizations?memberId&dob&npiTaxId
+
+
+Same multiple/single logic as patient.
+
+6.5 Post-Result Menu (Authorization)
+
+Options identical to claims:
+
+Repeat
+
+Another authorization
+
+Main menu
+
+Transfer to customer service
+
+7. ELIGIBILITY FLOW
+7.1 Data Required
+Field	Required
+Member ID	Yes
+DOB	Yes
+7.2 Steps
+
+Ask Member ID
+
+Confirm
+
+Ask DOB
+
+Confirm
+
+Call API:
+
+GET /eligibility?memberId&dob
+
+
+Return:
+
+Coverage status
+
+Plan details
+
+Effective dates
+
+7.3 Post-Result Menu (Eligibility)
+
+Offer:
+
+Voice Option	Action
+Repeat	Repeat
+Another member	Restart eligibility
+Main menu	Go to main
+Not helpful	Transfer
+8. FALLBACK & ERROR HANDLING
+8.1 Unknown Intent
+
+"I’m sorry, I can help with claim status, authorization status, or eligibility. Which would you like?"
+
+3 failures → transfer.
+
+8.2 No Records Found
+
+Agent:
+
+"I couldn’t find any records with the information provided."
+
+Offer:
+
+Retry
+
+Customer service
+
+8.3 Transfer to Customer Service
+
+Triggered when:
+
+User asks for agent
+
+Too many retries
+
+User presses fallback options
+
+Twilio transfer:
+
+<Redirect to customer service number>
+
+9. Conversation UX Requirements
+
+The agent must:
+
+Speak naturally
+
+Use conversational confirmations
+
+Allow interruptions
+
+Allow corrections anytime
+
+Allow “start over”
+
+Allow “go back”
+
+10. Technical Implementation Mapping
+Component	Responsibility
+Twilio	Call handling + transfer
+Vocode	Conversation loop
+Deepgram	Speech → text
+OpenAI	Intent + dialog
+ElevenLabs	Voice output
+Backend APIs	Data retrieval
+11. Conversation State Model
+CALL_START
+ → INTENT_CAPTURE
+   → CLAIM_FLOW
+   → AUTH_FLOW
+   → ELIGIBILITY_FLOW
+ → RESULT_MENU
+ → TRANSFER OR END
+
+12. End Call Flow
+
+Agent:
+
+"Thank you for calling. Have a great day."
+
+Twilio hangs up.
